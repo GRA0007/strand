@@ -1,18 +1,44 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@font-face {
+  font-family: 'Inter';
+  font-weight: 100 900;
+  font-style: oblique 0deg 10deg;
+  src: url('/fonts/inter-slnt,wght.woff2') format('woff2');
+}
+
+@theme {
+  --font-family-sans: 'Inter', sans-serif;
+
+  --color-background: #181818;
+  --color-foreground: #EEEEEE;
+  --color-surface: #282828;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --color-background: #FFFFFF;
+    --color-foreground: #000000;
+  }
+}
+
+@layer utilities {
+  .slant {
+    font-variation-settings: "slnt" -10;
+  }
+}
 
 :root {
-  font-family: Inter, sans-serif;
   font-size: 16px;
   font-weight: 400;
-
-  color: #FFFFFF;
-  background-color: #181818;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-family-sans);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
 }
