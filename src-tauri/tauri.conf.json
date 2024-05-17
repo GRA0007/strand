@@ -6,7 +6,7 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "strand",
+    "productName": "Strand",
     "version": "0.0.0"
   },
   "tauri": {
@@ -19,9 +19,9 @@
     },
     "windows": [
       {
-        "title": "strand",
-        "width": 1200,
-        "height": 600
+        "title": "Strand",
+        "width": 1400,
+        "height": 800
       }
     ],
     "security": {
@@ -30,7 +30,7 @@
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "com.tauri.dev",
+      "identifier": "dev.bengrant.strand",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
