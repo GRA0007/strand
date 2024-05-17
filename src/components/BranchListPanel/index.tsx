@@ -17,7 +17,7 @@ export const BranchListPanel = ({ title, icon, actions, className, children, ...
         {actions}
       </header>
 
-      <div className="px-2 py-1 text-xs">{children}</div>
+      <div className="px-2 py-1 text-sm">{children}</div>
     </Panel>
   )
 }
