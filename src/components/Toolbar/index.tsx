@@ -13,7 +13,7 @@ import { IconButton } from '../IconButton'
 
 export const Toolbar = () => {
   return (
-    <nav className="flex gap-4 items-center">
+    <nav className="flex gap-3 items-center">
       <IconButton tooltip="Fetch">
         <RefreshCwIcon />
       </IconButton>
@@ -27,7 +27,7 @@ export const Toolbar = () => {
         <GitBranchPlusIcon />
       </IconButton>
 
-      <div className="w-px bg-white/20 self-stretch" />
+      <div className="w-px bg-white/20 mx-2 self-stretch" />
 
       <IconButton tooltip="Undo">
         <UndoIcon />
@@ -46,9 +46,12 @@ export const Toolbar = () => {
 
       <div className="flex-1" />
 
-      <div className="font-semibold flex gap-2 items-center">
-        stevent <ChevronDownIcon className="h-3 w-3" />
-      </div>
+      <button
+        type="button"
+        className="font-semibold flex gap-2 items-center rounded hover:bg-foreground/10 active:bg-foreground/20 h-8 px-2"
+      >
+        strand <ChevronDownIcon className="h-3 w-3" />
+      </button>
       <IconButton tooltip="Settings">
         <SettingsIcon />
       </IconButton>
