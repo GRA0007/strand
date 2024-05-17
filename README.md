@@ -1,4 +1,4 @@
-<img src="./src-tauri/icons/icon.png" width="100" align="right">
+<img src="./public/logo.png" width="100">
 
 # Strand
 
