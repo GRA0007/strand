@@ -1,7 +1,6 @@
 import {
   ArrowDownToLineIcon,
   ArrowUpFromLineIcon,
-  ChevronDownIcon,
   GitBranchPlusIcon,
   RedoIcon,
   RefreshCwIcon,
@@ -10,6 +9,7 @@ import {
   UndoIcon,
 } from 'lucide-react'
 import { IconButton } from '../IconButton'
+import { RepositorySelector } from '../RepositorySelector'
 
 export const Toolbar = () => {
   return (
@@ -46,12 +46,7 @@ export const Toolbar = () => {
 
       <div className="flex-1" />
 
-      <button
-        type="button"
-        className="font-semibold flex gap-2 items-center rounded hover:bg-foreground/10 active:bg-foreground/20 h-8 px-2"
-      >
-        strand <ChevronDownIcon className="h-3 w-3" />
-      </button>
+      <RepositorySelector />
       <IconButton tooltip="Settings">
         <SettingsIcon />
       </IconButton>

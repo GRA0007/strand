@@ -1,0 +1,55 @@
+import { DropdownMenu, DropdownMenuTrigger } from '@radix-ui/react-dropdown-menu'
+import { Tooltip, TooltipTrigger } from '@radix-ui/react-tooltip'
+import { CheckIcon, ChevronDownIcon, CopyIcon, FolderIcon, PlusIcon } from 'lucide-react'
+import { cn } from '../../utils/cn'
+import { DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '../DropdownMenu'
+import { TooltipContent } from '../Tooltip'
+
+const recentRepos = ['strand', 'stevent', 'windpipe', 'hidden-kittens']
+
+export const RepositorySelector = () => {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger className="font-semibold flex gap-2 items-center rounded outline-none hover:bg-foreground/10 data-[state='open']:bg-foreground/10 h-8 px-2 select-none">
+        strand <ChevronDownIcon className="h-3 w-3 [[data-state='open']_&]:rotate-180" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {recentRepos.map((name) => (
+          <DropdownMenuItem
+            key={name}
+            className={cn('justify-end pl-3 text-base gap-2', name === 'strand' && 'font-semibold')}
+          >
+            {name}{' '}
+            {name === 'strand' ? (
+              <CheckIcon className="h-3 w-3" />
+            ) : name === 'windpipe' ? (
+              <Tooltip>
+                <TooltipTrigger className="h-3 w-3 flex items-center justify-center">
+                  <div className="rounded-full h-1 w-1 bg-foreground/40" />
+                </TooltipTrigger>
+                <TooltipContent>New updates</TooltipContent>
+              </Tooltip>
+            ) : (
+              <div className="h-3 w-3" />
+            )}
+          </DropdownMenuItem>
+        ))}
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem className="gap-2 justify-end">
+          <span className="text-foreground/80">Create</span>
+          <PlusIcon className="h-3 w-3 opacity-60" />
+        </DropdownMenuItem>
+        <DropdownMenuItem className="gap-2 justify-end">
+          <span className="text-foreground/80">Clone</span>
+          <CopyIcon className="h-3 w-3 opacity-60" />
+        </DropdownMenuItem>
+        <DropdownMenuItem className="gap-2 justify-end">
+          <span className="text-foreground/80">Open from file</span>
+          <FolderIcon className="h-3 w-3 opacity-60" />
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
