@@ -1,4 +1,6 @@
-use std::{fs::canonicalize, process::Command};
+use std::{ffi::OsStr, fs::canonicalize, process::Command};
+
+use tauri::Manager;
 
 pub struct GitCommand {
     command: String,
@@ -33,7 +35,7 @@ impl GitCommand {
             .join("%00")
     }
 
-    pub fn run(&self) -> String {
+    pub fn run(&self, app_handle: Option<tauri::AppHandle>) -> String {
         let mut cmd = Command::new("git");
         cmd.arg(&self.command);
         for arg in self.args.iter() {
@@ -43,6 +45,19 @@ impl GitCommand {
         let output = cmd.output().unwrap();
         if !output.status.success() {
             panic!("Git command failed");
+        }
+        if let Some(app_handle) = app_handle {
+            let program = cmd.get_program();
+            let args = cmd
+                .get_args()
+                .collect::<Vec<&OsStr>>()
+                .join(OsStr::new(" "));
+            app_handle
+                .emit_all(
+                    "git_command",
+                    format!("{} {}", program.to_str().unwrap(), args.to_str().unwrap()),
+                )
+                .unwrap();
         }
         String::from_utf8(output.stdout).unwrap()
     }

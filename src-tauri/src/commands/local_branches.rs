@@ -59,12 +59,12 @@ const LOCAL_BRANCH_FIELDS: &[&str] = &[
 
 #[tauri::command]
 #[specta::specta]
-pub fn local_branches() -> Vec<LocalBranch> {
+pub fn local_branches(app_handle: tauri::AppHandle) -> Vec<LocalBranch> {
     let format = GitCommand::create_format_arg(LOCAL_BRANCH_FIELDS);
     let branches = GitCommand::new("for-each-ref")
         .arg(format!("--format={format}"))
         .arg("refs/heads")
-        .run();
+        .run(Some(app_handle));
     branches
         .lines()
         .map(|line| {

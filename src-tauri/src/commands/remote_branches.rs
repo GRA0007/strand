@@ -14,12 +14,12 @@ const REMOTE_BRANCH_FIELDS: &[&str] = &["refname:short", "objectname"];
 
 #[tauri::command]
 #[specta::specta]
-pub fn remote_branches() -> Vec<RemoteBranch> {
+pub fn remote_branches(app_handle: tauri::AppHandle) -> Vec<RemoteBranch> {
     let format = GitCommand::create_format_arg(REMOTE_BRANCH_FIELDS);
     let branches = GitCommand::new("for-each-ref")
         .arg(format!("--format={format}"))
         .arg("refs/remotes")
-        .run();
+        .run(Some(app_handle));
     branches
         .lines()
         .map(|line| {
