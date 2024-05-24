@@ -10,8 +10,10 @@ declare global {
 // Function avoids 'window not defined' in SSR
 const invoke = () => window.__TAURI_INVOKE__;
 
-export function listBranches() {
-    return invoke()<Branch[]>("list_branches")
+export function localBranches() {
+    return invoke()<LocalBranch[]>("local_branches")
 }
 
-export type Branch = { name: string; remote: string | null }
+export type UpstreamTrack = { Delta: [number, number] } | "InSync" | "Gone"
+export type GitHash = string
+export type LocalBranch = { head: boolean; name: string[]; upstream_name: string[]; upstream_track: UpstreamTrack; hash: GitHash }

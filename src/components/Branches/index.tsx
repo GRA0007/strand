@@ -1,14 +1,24 @@
+import { Tooltip, TooltipTrigger } from '@radix-ui/react-tooltip'
 import { useQuery } from '@tanstack/react-query'
-import { CircleDashedIcon, CircleIcon, PaintbrushIcon, PlusIcon } from 'lucide-react'
+import {
+  CircleDashedIcon,
+  CircleIcon,
+  MoveDownIcon,
+  MoveUpIcon,
+  PaintbrushIcon,
+  PlusIcon,
+  TriangleAlertIcon,
+} from 'lucide-react'
 import { PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
-import { listBranches } from '../../commands'
+import { type UpstreamTrack, localBranches } from '../../commands'
 import { BranchListPanel } from '../BranchListPanel'
 import { IconButton } from '../IconButton'
+import { TooltipContent } from '../Tooltip'
 
 export const Branches = () => {
   const { data } = useQuery({
     queryKey: ['branches'],
-    queryFn: () => listBranches(),
+    queryFn: () => localBranches(),
   })
 
   return (
@@ -21,13 +31,19 @@ export const Branches = () => {
             <PaintbrushIcon />
           </IconButton>
         }
-      >
-        {data
-          ?.filter((b) => !b.remote)
-          .map((b) => (
-            <li key={b.name}>{b.name}</li>
-          ))}
-      </BranchListPanel>
+        items={
+          data?.map((d) => ({
+            hash: d.hash,
+            path: d.name,
+            children: (
+              <>
+                <span className="mr-auto">{d.name[d.name.length - 1]}</span>
+                <BranchDelta upstreamTrack={d.upstream_track} />
+              </>
+            ),
+          })) ?? []
+        }
+      />
 
       <PanelResizeHandle className="h-4" />
 
@@ -39,15 +55,49 @@ export const Branches = () => {
             <PlusIcon />
           </IconButton>
         }
-      >
-        {data
-          ?.filter((b) => b.remote)
-          .map((b) => (
-            <li key={b.name}>
-              {b.remote}/{b.name}
-            </li>
-          ))}
-      </BranchListPanel>
+        items={[]}
+      />
     </PanelGroup>
+  )
+}
+
+const BranchDelta = ({ upstreamTrack }: { upstreamTrack: UpstreamTrack }) => {
+  if (upstreamTrack === 'InSync') return null
+
+  if (upstreamTrack === 'Gone')
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div>
+            <TriangleAlertIcon className="h-3 w-3" />
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>Upstream branch missing</TooltipContent>
+      </Tooltip>
+    )
+
+  return (
+    <>
+      {upstreamTrack.Delta[0] !== 0 && (
+        <Tooltip>
+          <TooltipTrigger asChild className="flex items-center text-xs gap-px">
+            <div>
+              {upstreamTrack.Delta[0]} <MoveUpIcon className="h-3 w-3" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>{upstreamTrack.Delta[0]} ahead</TooltipContent>
+        </Tooltip>
+      )}
+      {upstreamTrack.Delta[1] !== 0 && (
+        <Tooltip>
+          <TooltipTrigger asChild className="flex items-center text-xs gap-px">
+            <div>
+              {upstreamTrack.Delta[1]} <MoveDownIcon className="h-3 w-3" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>{upstreamTrack.Delta[1]} behind</TooltipContent>
+        </Tooltip>
+      )}
+    </>
   )
 }
