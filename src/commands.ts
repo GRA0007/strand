@@ -19,6 +19,6 @@ export function remoteBranches() {
 }
 
 export type UpstreamTrack = { Delta: [number, number] } | "InSync" | "Gone"
-export type RemoteBranch = { name: string[]; hash: GitHash }
 export type GitHash = string
 export type LocalBranch = { head: boolean; name: string[]; upstream_name: string[]; upstream_track: UpstreamTrack; hash: GitHash }
+export type RemoteBranch = { name: string[]; hash: GitHash }
