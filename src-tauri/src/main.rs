@@ -67,6 +67,13 @@ struct LocalBranch {
     hash: GitHash,
 }
 
+#[derive(Debug, Serialize, Type)]
+struct RemoteBranch {
+    /// e.g. `["origin", "feat", "implement-stuff"]`
+    name: Vec<String>,
+    hash: GitHash,
+}
+
 const LOCAL_BRANCH_FIELDS: &[&str] = &[
     "HEAD",
     "refname:short",
@@ -75,12 +82,13 @@ const LOCAL_BRANCH_FIELDS: &[&str] = &[
     "objectname",
 ];
 
+const REMOTE_BRANCH_FIELDS: &[&str] = &["refname:short", "objectname"];
+
 #[tauri::command]
 #[specta::specta]
 fn local_branches() -> Vec<LocalBranch> {
     let format = GitCommand::create_format_arg(LOCAL_BRANCH_FIELDS);
     let branches = GitCommand::new("for-each-ref")
-        .arg("--sort=refname")
         .arg(format!("--format={format}"))
         .arg("refs/heads")
         .run();
@@ -109,16 +117,45 @@ fn local_branches() -> Vec<LocalBranch> {
         .collect()
 }
 
+#[tauri::command]
+#[specta::specta]
+fn remote_branches() -> Vec<RemoteBranch> {
+    let format = GitCommand::create_format_arg(REMOTE_BRANCH_FIELDS);
+    let branches = GitCommand::new("for-each-ref")
+        .arg(format!("--format={format}"))
+        .arg("refs/remotes")
+        .run();
+    branches
+        .lines()
+        .map(|line| {
+            let mut parts = line.split('\x00');
+            RemoteBranch {
+                name: parts
+                    .next()
+                    .unwrap()
+                    .split('/')
+                    .map(|s| s.to_owned())
+                    .collect(),
+                hash: parts.next().unwrap().to_string().try_into().unwrap(),
+            }
+        })
+        .filter(|branch| branch.name.last() != Some(&"HEAD".to_owned()))
+        .collect()
+}
+
 fn main() {
     // Generate ts types
     #[cfg(debug_assertions)]
-    Exporter::new(collect_types![local_branches], "../src/commands.ts")
-        .with_cfg(ExportConfiguration::new().bigint(specta::ts::BigIntExportBehavior::Number))
-        .export()
-        .unwrap();
+    Exporter::new(
+        collect_types![local_branches, remote_branches],
+        "../src/commands.ts",
+    )
+    .with_cfg(ExportConfiguration::new().bigint(specta::ts::BigIntExportBehavior::Number))
+    .export()
+    .unwrap();
 
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![local_branches])
+        .invoke_handler(tauri::generate_handler![local_branches, remote_branches])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -10,15 +10,20 @@ import {
   TriangleAlertIcon,
 } from 'lucide-react'
 import { PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
-import { type UpstreamTrack, localBranches } from '../../commands'
+import { type UpstreamTrack, localBranches, remoteBranches } from '../../commands'
 import { BranchListPanel } from '../BranchListPanel'
 import { IconButton } from '../IconButton'
 import { TooltipContent } from '../Tooltip'
 
 export const Branches = () => {
-  const { data } = useQuery({
-    queryKey: ['branches'],
+  const { data: local } = useQuery({
+    queryKey: ['branches', 'local'],
     queryFn: () => localBranches(),
+  })
+
+  const { data: remote } = useQuery({
+    queryKey: ['branches', 'remote'],
+    queryFn: () => remoteBranches(),
   })
 
   return (
@@ -32,7 +37,7 @@ export const Branches = () => {
           </IconButton>
         }
         items={
-          data?.map((d) => ({
+          local?.map((d) => ({
             hash: d.hash,
             path: d.name,
             children: (
@@ -55,7 +60,17 @@ export const Branches = () => {
             <PlusIcon />
           </IconButton>
         }
-        items={[]}
+        items={
+          remote?.map((d) => ({
+            hash: d.hash,
+            path: d.name,
+            children: (
+              <>
+                <span className="mr-auto">{d.name[d.name.length - 1]}</span>
+              </>
+            ),
+          })) ?? []
+        }
       />
     </PanelGroup>
   )
