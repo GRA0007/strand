@@ -10,20 +10,15 @@ import {
   TriangleAlertIcon,
 } from 'lucide-react'
 import { PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
-import { type UpstreamTrack, localBranches, remoteBranches } from '../../commands'
+import { type UpstreamTrack, commands } from '../../bindings'
 import { BranchListPanel } from '../BranchListPanel'
 import { IconButton } from '../IconButton'
 import { TooltipContent } from '../Tooltip'
 
 export const Branches = () => {
-  const { data: local } = useQuery({
-    queryKey: ['branches', 'local'],
-    queryFn: () => localBranches(),
-  })
-
-  const { data: remote } = useQuery({
-    queryKey: ['branches', 'remote'],
-    queryFn: () => remoteBranches(),
+  const { data } = useQuery({
+    queryKey: ['branches'],
+    queryFn: () => commands.getBranches(),
   })
 
   return (
@@ -37,7 +32,7 @@ export const Branches = () => {
           </IconButton>
         }
         items={
-          local?.map((d) => ({
+          data?.local.map((d) => ({
             hash: d.hash,
             path: d.name,
             children: (
@@ -61,7 +56,7 @@ export const Branches = () => {
           </IconButton>
         }
         items={
-          remote?.map((d) => ({
+          data?.remote.map((d) => ({
             hash: d.hash,
             path: d.name,
             children: (
@@ -77,9 +72,7 @@ export const Branches = () => {
 }
 
 const BranchDelta = ({ upstreamTrack }: { upstreamTrack: UpstreamTrack }) => {
-  if (upstreamTrack === 'InSync') return null
-
-  if (upstreamTrack === 'Gone')
+  if (!upstreamTrack)
     return (
       <Tooltip>
         <TooltipTrigger asChild>
@@ -91,26 +84,28 @@ const BranchDelta = ({ upstreamTrack }: { upstreamTrack: UpstreamTrack }) => {
       </Tooltip>
     )
 
+  if (upstreamTrack[0] === 0 && upstreamTrack[1] === 1) return null
+
   return (
     <>
-      {upstreamTrack.Delta[0] !== 0 && (
+      {upstreamTrack[0] !== 0 && (
         <Tooltip>
           <TooltipTrigger asChild className="flex items-center text-xs gap-px">
             <div>
-              {upstreamTrack.Delta[0]} <MoveUpIcon className="h-3 w-3" />
+              {upstreamTrack[0]} <MoveUpIcon className="h-3 w-3" />
             </div>
           </TooltipTrigger>
-          <TooltipContent>{upstreamTrack.Delta[0]} ahead</TooltipContent>
+          <TooltipContent>{upstreamTrack[0]} ahead</TooltipContent>
         </Tooltip>
       )}
-      {upstreamTrack.Delta[1] !== 0 && (
+      {upstreamTrack[1] !== 0 && (
         <Tooltip>
           <TooltipTrigger asChild className="flex items-center text-xs gap-px">
             <div>
-              {upstreamTrack.Delta[1]} <MoveDownIcon className="h-3 w-3" />
+              {upstreamTrack[1]} <MoveDownIcon className="h-3 w-3" />
             </div>
           </TooltipTrigger>
-          <TooltipContent>{upstreamTrack.Delta[1]} behind</TooltipContent>
+          <TooltipContent>{upstreamTrack[1]} behind</TooltipContent>
         </Tooltip>
       )}
     </>

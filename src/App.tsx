@@ -1,8 +1,8 @@
 import { TooltipProvider } from '@radix-ui/react-tooltip'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { listen } from '@tauri-apps/api/event'
 import { useEffect, useRef, useState } from 'react'
 import { type ImperativePanelHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
+import { events } from './bindings'
 import { Branches } from './components/Branches'
 import { Toolbar } from './components/Toolbar'
 
@@ -14,7 +14,7 @@ export const App = () => {
 
   const [recentCommand, setRecentCommand] = useState('')
   useEffect(() => {
-    const unlisten = listen<string>('git_command', ({ payload }) => {
+    const unlisten = events.gitCommandEvent.listen(({ payload }) => {
       setRecentCommand(payload)
     })
     return () => {

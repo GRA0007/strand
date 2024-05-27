@@ -1,9 +1,9 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use serde::Serialize;
-use specta::{collect_types, ts::ExportConfiguration, Type};
-use tauri_specta::ts::Exporter;
+use serde::{Deserialize, Serialize};
+use specta::{ts::ExportConfig, Type};
+use tauri_specta::{collect_commands, collect_events, ts, Event};
 
 use crate::commands::*;
 
@@ -23,25 +23,29 @@ impl TryFrom<String> for GitHash {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
+struct GitCommandEvent(String);
+
 fn main() {
-    // Generate ts types
-    #[cfg(debug_assertions)]
-    Exporter::new(
-        collect_types![
-            local_branches::local_branches,
-            remote_branches::remote_branches
-        ],
-        "../src/commands.ts",
-    )
-    .with_cfg(ExportConfiguration::new().bigint(specta::ts::BigIntExportBehavior::Number))
-    .export()
-    .unwrap();
+    let (invoke_handler, register_events) = {
+        let builder = ts::builder()
+            .commands(collect_commands!(get_branches::get_branches))
+            .events(collect_events!(GitCommandEvent))
+            .config(ExportConfig::new().bigint(specta::ts::BigIntExportBehavior::Number));
+
+        // Generate ts types
+        #[cfg(debug_assertions)]
+        let builder = builder.path("../src/bindings.ts");
+
+        builder.build().unwrap()
+    };
 
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![
-            local_branches::local_branches,
-            remote_branches::remote_branches
-        ])
+        .invoke_handler(invoke_handler)
+        .setup(|app| {
+            register_events(app);
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

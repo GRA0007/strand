@@ -7,7 +7,7 @@
     "defaultBranch": "main"
   },
   "files": {
-    "ignore": ["src-tauri/**"]
+    "ignore": ["src-tauri/**", "bindings.ts"]
   },
   "organizeImports": {
     "enabled": true
