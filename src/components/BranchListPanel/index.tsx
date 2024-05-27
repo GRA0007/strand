@@ -74,6 +74,7 @@ type Tree = {
   [key in string]: Tree | Item
 }
 
+// TODO: Migrate this processing to rust
 const itemsToTree = (items: Item[]): Tree => {
   // biome-ignore lint/suspicious/noExplicitAny: Allow nested object
   const setNestedProperty = (obj: Record<string, any>, path: string[], value: unknown) => {

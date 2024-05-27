@@ -1431,6 +1431,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tauri-apps/api@npm:2.0.0-beta.11":
+  version: 2.0.0-beta.11
+  resolution: "@tauri-apps/api@npm:2.0.0-beta.11"
+  checksum: 10/7917f5fda9c057375950ab57fb0b03642f86768f3e093ff6403cce77afd3f6fb7c47d529664c8ec4d2a6f77cc5d979c7a6331010b1c24f68f02cf42179a05114
+  languageName: node
+  linkType: hard
+
 "@tauri-apps/api@npm:^2.0.0-beta.12":
   version: 2.0.0-beta.12
   resolution: "@tauri-apps/api@npm:2.0.0-beta.12"
@@ -1546,6 +1553,24 @@ __metadata:
   bin:
     tauri: tauri.js
   checksum: 10/3b858b398317c51b4817ae6c5fbbb4146987ac95d5ee20503a17154ca881ad96fd1ec8c52e1948941a0b1832081139e24154adea378538ab16b88833c3aeb27f
+  languageName: node
+  linkType: hard
+
+"@tauri-apps/plugin-dialog@npm:^2.0.0-beta.3":
+  version: 2.0.0-beta.3
+  resolution: "@tauri-apps/plugin-dialog@npm:2.0.0-beta.3"
+  dependencies:
+    "@tauri-apps/api": "npm:2.0.0-beta.11"
+  checksum: 10/4487b7039de24a2a039f61d014e1ae2d468a45760bea64d687c13c240adea92b4a6d21243b7e3f6b31fb99ebac5a53027ebc7e04bec6b5f927547a80fa7846a2
+  languageName: node
+  linkType: hard
+
+"@tauri-apps/plugin-store@npm:^2.0.0-beta.3":
+  version: 2.0.0-beta.3
+  resolution: "@tauri-apps/plugin-store@npm:2.0.0-beta.3"
+  dependencies:
+    "@tauri-apps/api": "npm:2.0.0-beta.11"
+  checksum: 10/51c3588c49ac89960f6962dff093803603a52ac33614df0bec556209f26aee0a92bff20fdc5c62dec4c9372c3685cea87e00bb5257fd0a73e7ca484407d49c89
   languageName: node
   linkType: hard
 
@@ -2943,6 +2968,8 @@ __metadata:
     "@tanstack/react-query": "npm:^5.36.2"
     "@tauri-apps/api": "npm:^2.0.0-beta.12"
     "@tauri-apps/cli": "npm:^2.0.0-beta.18"
+    "@tauri-apps/plugin-dialog": "npm:^2.0.0-beta.3"
+    "@tauri-apps/plugin-store": "npm:^2.0.0-beta.3"
     "@types/react": "npm:^18.3.2"
     "@types/react-dom": "npm:^18.3.0"
     "@vitejs/plugin-react": "npm:^4.2.1"
