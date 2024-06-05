@@ -14,11 +14,11 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "lint": "biome check .",
-    "format": "biome check --apply ."
+    "lint": "biome check",
+    "format": "biome check --fix"
   },
   "dependencies": {
-    "@biomejs/biome": "^1.7.3",
+    "@biomejs/biome": "^1.8.0",
     "@radix-ui/react-dropdown-menu": "^2.0.6",
     "@radix-ui/react-tooltip": "^1.0.7",
     "@tailwindcss/vite": "^4.0.0-alpha.15",
