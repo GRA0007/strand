@@ -1565,15 +1565,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tauri-apps/plugin-store@npm:^2.0.0-beta.3":
-  version: 2.0.0-beta.3
-  resolution: "@tauri-apps/plugin-store@npm:2.0.0-beta.3"
-  dependencies:
-    "@tauri-apps/api": "npm:2.0.0-beta.11"
-  checksum: 10/51c3588c49ac89960f6962dff093803603a52ac33614df0bec556209f26aee0a92bff20fdc5c62dec4c9372c3685cea87e00bb5257fd0a73e7ca484407d49c89
-  languageName: node
-  linkType: hard
-
 "@types/babel__core@npm:^7.20.5":
   version: 7.20.5
   resolution: "@types/babel__core@npm:7.20.5"
@@ -2969,7 +2960,6 @@ __metadata:
     "@tauri-apps/api": "npm:^2.0.0-beta.12"
     "@tauri-apps/cli": "npm:^2.0.0-beta.18"
     "@tauri-apps/plugin-dialog": "npm:^2.0.0-beta.3"
-    "@tauri-apps/plugin-store": "npm:^2.0.0-beta.3"
     "@types/react": "npm:^18.3.2"
     "@types/react-dom": "npm:^18.3.0"
     "@vitejs/plugin-react": "npm:^4.2.1"

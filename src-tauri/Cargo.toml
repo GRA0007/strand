@@ -18,7 +18,6 @@ specta = "2.0.0-rc.12"
 sqlx = { version = "0.7", features = [ "runtime-tokio", "sqlite" ] }
 tauri-specta = { version = "2.0.0-rc.5", features = ["typescript"] }
 tauri-plugin-shell = "2.0.0-beta.5"
-tauri-plugin-store = "2.0.0-beta.6"
 tauri-plugin-dialog = "2.0.0-beta.7"
 
 [features]

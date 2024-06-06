@@ -14,10 +14,6 @@
     "menu:default",
     "tray:default",
     "shell:allow-open",
-    "store:default",
-    "store:allow-set",
-    "store:allow-get",
-    "store:allow-save",
     "dialog:default",
     "dialog:allow-open",
     "webview:allow-internal-toggle-devtools"
