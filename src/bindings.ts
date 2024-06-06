@@ -3,6 +3,22 @@
          export const commands = {
 async getBranches() : Promise<Branches> {
 return await TAURI_INVOKE("get_branches");
+},
+async addRepository(path: string, createdAt: string) : Promise<Result<null, null>> {
+try {
+    return { status: "ok", data: await TAURI_INVOKE("add_repository", { path, createdAt }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async getRepositories() : Promise<Result<Repository[], null>> {
+try {
+    return { status: "ok", data: await TAURI_INVOKE("get_repositories") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -27,6 +43,7 @@ export type RemoteBranch = {
  * e.g. `["origin", "feat", "implement-stuff"]`
  */
 name: string[]; hash: GitHash }
+export type Repository = { id: number; folder_name: string; local_path: string; created_at: string; last_fetched_at: string | null }
 /**
  * If both are 0, it's in sync. If None, the tracked upstream is missing.
  */
