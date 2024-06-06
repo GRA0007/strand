@@ -4,9 +4,9 @@
 async getBranches() : Promise<Branches> {
 return await TAURI_INVOKE("get_branches");
 },
-async addRepository(path: string, createdAt: string) : Promise<Result<null, null>> {
+async addRepository(localPath: string, createdAt: string) : Promise<Result<null, null>> {
 try {
-    return { status: "ok", data: await TAURI_INVOKE("add_repository", { path, createdAt }) };
+    return { status: "ok", data: await TAURI_INVOKE("add_repository", { localPath, createdAt }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -15,6 +15,22 @@ try {
 async getRepositories() : Promise<Result<Repository[], null>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("get_repositories") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async getState() : Promise<Result<State, null>> {
+try {
+    return { status: "ok", data: await TAURI_INVOKE("get_state") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async setOpenRepository(openRepository: number) : Promise<Result<null, null>> {
+try {
+    return { status: "ok", data: await TAURI_INVOKE("set_open_repository", { openRepository }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -43,7 +59,8 @@ export type RemoteBranch = {
  * e.g. `["origin", "feat", "implement-stuff"]`
  */
 name: string[]; hash: GitHash }
-export type Repository = { id: number; folder_name: string; local_path: string; created_at: string; last_fetched_at: string | null }
+export type Repository = { id: number; name: string; local_path: string; created_at: string; last_opened_at: string | null; last_fetched_at: string | null; has_changes: boolean }
+export type State = { id: number; open_repository: number | null }
 /**
  * If both are 0, it's in sync. If None, the tracked upstream is missing.
  */

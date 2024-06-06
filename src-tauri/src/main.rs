@@ -39,6 +39,8 @@ fn main() {
                 get_branches::get_branches,
                 repository::add_repository,
                 repository::get_repositories,
+                state::get_state,
+                state::set_open_repository,
             ))
             .events(collect_events!(GitCommandEvent))
             .config(ExportConfig::new().bigint(specta::ts::BigIntExportBehavior::Number));
@@ -59,7 +61,7 @@ fn main() {
 
             let app_path = app.path().app_config_dir().expect("No app path found");
             create_dir_all(&app_path).expect("Couldn't create app directory");
-            let db_url = format!("sqlite:{}data.db", app_path.to_string_lossy());
+            let db_url = format!("sqlite:{}/data.db", app_path.to_string_lossy());
 
             tauri::async_runtime::block_on(async move {
                 // Create DB and connect
