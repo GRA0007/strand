@@ -16,8 +16,18 @@ import { IconButton } from '../IconButton'
 import { TooltipContent } from '../Tooltip'
 
 export const Branches = () => {
+  const { data: state } = useQuery({
+    queryKey: ['state'],
+    queryFn: () =>
+      commands.getStateData().then((res) => {
+        if (res.status === 'error') throw res.error
+        return res.data
+      }),
+  })
+
   const { data } = useQuery({
     queryKey: ['branches'],
+    enabled: Boolean(state?.open_repository),
     queryFn: () => commands.getBranches(),
   })
 
