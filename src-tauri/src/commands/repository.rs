@@ -1,6 +1,9 @@
+use std::path::PathBuf;
+
 use serde::Serialize;
 use specta::Type;
 use sqlx::prelude::FromRow;
+use tokio::fs;
 
 use crate::DbPool;
 
@@ -22,6 +25,15 @@ pub async fn add_repository(
     local_path: String,
     created_at: String,
 ) -> Result<(), ()> {
+    let local_path = PathBuf::from(local_path);
+
+    // Check that it's a valid git repository
+    fs::metadata(local_path.join(".git"))
+        .await
+        .ok()
+        .filter(|meta| meta.is_dir())
+        .ok_or(())?;
+
     let pool = pool.0.lock().await;
     let insert_res = sqlx::query(
         "
@@ -32,8 +44,8 @@ INSERT INTO repository (
 )
     ",
     )
-    .bind(local_path.clone().split('/').last().unwrap())
-    .bind(local_path)
+    .bind(local_path.file_name().map(|name| name.to_str()).ok_or(())?)
+    .bind(local_path.to_str())
     .bind(created_at)
     .execute(&*pool)
     .await

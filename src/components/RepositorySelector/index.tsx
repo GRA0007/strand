@@ -19,6 +19,7 @@ export const RepositorySelector = () => {
         return res.data
       }),
   })
+
   const { data: state } = useQuery({
     queryKey: ['state'],
     queryFn: () =>
@@ -29,10 +30,17 @@ export const RepositorySelector = () => {
   })
 
   const addRepository = useMutation({
-    mutationFn: (localPath: string) => commands.addRepository(localPath, 'now!'),
+    mutationFn: (localPath: string) =>
+      commands.addRepository(localPath, 'now!').then((res) => {
+        if (res.status === 'error') throw res.error
+        return res.data
+      }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['repositories'] })
       await queryClient.invalidateQueries({ queryKey: ['state'] })
+    },
+    onError: () => {
+      console.error('Failed')
     },
   })
 
@@ -93,7 +101,6 @@ export const RepositorySelector = () => {
               multiple: false,
             })
             if (!folder) return
-            // TODO: check it's a valid git folder
             addRepository.mutate(folder)
           }}
         >
