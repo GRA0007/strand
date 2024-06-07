@@ -1,0 +1,39 @@
+name: Checks
+
+on: push
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          cache: yarn
+      - run: yarn install
+      - run: yarn biome ci --reporter=github --error-on-warnings
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - uses: actions/setup-node@v4
+        with:
+          cache: yarn
+      - run: yarn install
+      - run: yarn tsc
+
+  clippy:
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: "-Dwarnings" # Fail on warnings
+    steps:
+      - uses: actions/checkout@v4
+      - run: cargo clippy
+        working-directory: src-tauri
