@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use specta::{ts::ExportConfig, Type};
 use sqlx::{migrate::MigrateDatabase, Sqlite, SqlitePool};
 use state::StrandState;
-use tauri::Manager;
+use tauri::{Manager, RunEvent};
 use tauri_specta::{collect_commands, collect_events, ts, Event};
 
 pub mod commands;
@@ -82,6 +82,16 @@ fn main() {
                 Ok(())
             })
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while running tauri application")
+        .run(|app, event| {
+            if let RunEvent::Exit = event {
+                // Close database connection
+                tauri::async_runtime::block_on(async move {
+                    let state: tauri::State<StrandState> = app.state();
+                    let state = state.0.lock().await;
+                    state.pool.close().await;
+                });
+            }
+        });
 }

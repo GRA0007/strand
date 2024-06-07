@@ -24,7 +24,7 @@ pub struct StrandData {
 }
 
 pub struct InnerState {
-    pool: Pool<Sqlite>,
+    pub pool: Pool<Sqlite>,
     pub data: StrandData,
 }
 
@@ -49,7 +49,7 @@ impl InnerState {
             "
 SELECT repository FROM state
 LEFT JOIN repository ON state.open_repository_id = repository.id
-WHERE id = 0
+WHERE state.id = 0
             ",
         )
         .fetch_one(&self.pool)

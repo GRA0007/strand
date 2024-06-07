@@ -49,7 +49,7 @@ impl GitCommand {
             .as_ref()
             .map(|repo| repo.local_path.clone())
             .ok_or(())
-            .unwrap();
+            .expect("No repo open");
         // TODO: can I unlock the mutex after grabbing the path? Git command may take a while
 
         // TODO: handle if no repo is open

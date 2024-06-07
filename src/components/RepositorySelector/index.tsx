@@ -46,9 +46,7 @@ export const RepositorySelector = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="font-semibold flex gap-2 items-center rounded outline-none hover:bg-foreground/10 data-[state='open']:bg-foreground/10 h-8 px-2 select-none">
-        {state?.open_repository
-          ? state.repositories?.find((r) => r.id === state.open_repository?.id)?.name
-          : 'Open a repository'}{' '}
+        {state?.open_repository?.name ?? 'Open a repository'}{' '}
         <ChevronDownIcon className="h-3 w-3 [[data-state='open']_&]:rotate-180" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
