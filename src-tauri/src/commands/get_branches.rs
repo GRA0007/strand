@@ -54,12 +54,13 @@ const LOCAL_BRANCH_FIELDS: &[&str] = &[
     "objectname",
 ];
 
-fn local_branches(app_handle: &tauri::AppHandle) -> Vec<LocalBranch> {
+async fn local_branches(app_handle: &tauri::AppHandle) -> Vec<LocalBranch> {
     let format = GitCommand::create_format_arg(LOCAL_BRANCH_FIELDS);
     let branches = GitCommand::new("for-each-ref")
         .arg(format!("--format={format}"))
         .arg("refs/heads")
-        .run(app_handle);
+        .run(app_handle)
+        .await;
     branches
         .lines()
         .map(|line| {
@@ -94,12 +95,13 @@ pub struct RemoteBranch {
 
 const REMOTE_BRANCH_FIELDS: &[&str] = &["refname:short", "objectname"];
 
-fn remote_branches(app_handle: &tauri::AppHandle) -> Vec<RemoteBranch> {
+async fn remote_branches(app_handle: &tauri::AppHandle) -> Vec<RemoteBranch> {
     let format = GitCommand::create_format_arg(REMOTE_BRANCH_FIELDS);
     let branches = GitCommand::new("for-each-ref")
         .arg(format!("--format={format}"))
         .arg("refs/remotes")
-        .run(app_handle);
+        .run(app_handle)
+        .await;
     branches
         .lines()
         .map(|line| {
@@ -126,9 +128,9 @@ pub struct Branches {
 
 #[tauri::command]
 #[specta::specta]
-pub fn get_branches(app_handle: tauri::AppHandle) -> Branches {
+pub async fn get_branches(app_handle: tauri::AppHandle) -> Branches {
     Branches {
-        local: local_branches(&app_handle),
-        remote: remote_branches(&app_handle),
+        local: local_branches(&app_handle).await,
+        remote: remote_branches(&app_handle).await,
     }
 }
