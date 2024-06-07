@@ -11,19 +11,10 @@ import { TooltipContent } from '../Tooltip'
 export const RepositorySelector = () => {
   const queryClient = useQueryClient()
 
-  const { data: repositories } = useQuery({
-    queryKey: ['repositories'],
-    queryFn: () =>
-      commands.getRepositories().then((res) => {
-        if (res.status === 'error') throw res.error
-        return res.data
-      }),
-  })
-
   const { data: state } = useQuery({
     queryKey: ['state'],
     queryFn: () =>
-      commands.getState().then((res) => {
+      commands.getStateData().then((res) => {
         if (res.status === 'error') throw res.error
         return res.data
       }),
@@ -31,12 +22,11 @@ export const RepositorySelector = () => {
 
   const addRepository = useMutation({
     mutationFn: (localPath: string) =>
-      commands.addRepository(localPath, 'now!').then((res) => {
+      commands.addRepositoryFromPath(localPath).then((res) => {
         if (res.status === 'error') throw res.error
         return res.data
       }),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['repositories'] })
       await queryClient.invalidateQueries({ queryKey: ['state'] })
       await queryClient.invalidateQueries({ queryKey: ['branches'] })
     },
@@ -56,20 +46,25 @@ export const RepositorySelector = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="font-semibold flex gap-2 items-center rounded outline-none hover:bg-foreground/10 data-[state='open']:bg-foreground/10 h-8 px-2 select-none">
-        {state?.open_repository ? repositories?.find((r) => r.id === state.open_repository)?.name : 'Open a repository'}{' '}
+        {state?.open_repository
+          ? state.repositories?.find((r) => r.id === state.open_repository?.id)?.name
+          : 'Open a repository'}{' '}
         <ChevronDownIcon className="h-3 w-3 [[data-state='open']_&]:rotate-180" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {repositories?.map((repo) => (
+        {state?.repositories?.map((repo) => (
           <DropdownMenuItem
             key={repo.name}
-            className={cn('justify-end pl-3 text-base gap-2', state?.open_repository === repo.id && 'font-semibold')}
+            className={cn(
+              'justify-end pl-3 text-base gap-2',
+              state?.open_repository?.id === repo.id && 'font-semibold',
+            )}
             onClick={() => {
               setOpenRepository.mutate(repo.id)
             }}
           >
             {repo.name}{' '}
-            {state?.open_repository === repo.id ? (
+            {state?.open_repository?.id === repo.id ? (
               <CheckIcon className="h-3 w-3" />
             ) : repo.has_changes ? (
               <Tooltip>
@@ -84,7 +79,7 @@ export const RepositorySelector = () => {
           </DropdownMenuItem>
         ))}
 
-        {(repositories?.length ?? 0) > 0 && <DropdownMenuSeparator />}
+        {(state?.repositories?.length ?? 0) > 0 && <DropdownMenuSeparator />}
 
         <DropdownMenuItem className="gap-2 justify-end">
           <span className="text-foreground/80">Create</span>

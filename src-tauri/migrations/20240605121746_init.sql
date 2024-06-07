@@ -2,16 +2,16 @@ CREATE TABLE IF NOT EXISTS repository (
   id INTEGER PRIMARY KEY NOT NULL,
   name TEXT NOT NULL,
   local_path TEXT NOT NULL UNIQUE,
-  created_at TEXT NOT NULL,
-  last_opened_at TEXT,
-  last_fetched_at TEXT,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_opened_at DATETIME,
+  last_fetched_at DATETIME,
   has_changes BOOLEAN
 );
 
 CREATE TABLE IF NOT EXISTS state (
   id INTEGER PRIMARY KEY NOT NULL,
-  open_repository INTEGER,
-  FOREIGN KEY (open_repository) REFERENCES repository(id)
+  open_repository_id INTEGER,
+  FOREIGN KEY (open_repository_id) REFERENCES repository(id)
 );
 
-INSERT OR IGNORE INTO state (id, open_repository) VALUES (0, NULL);
+INSERT OR IGNORE INTO state (id, open_repository_id) VALUES (0, NULL);

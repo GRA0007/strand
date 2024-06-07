@@ -4,33 +4,25 @@
 async getBranches() : Promise<Branches> {
 return await TAURI_INVOKE("get_branches");
 },
-async addRepository(localPath: string, createdAt: string) : Promise<Result<null, null>> {
+async addRepositoryFromPath(localPath: string) : Promise<Result<null, null>> {
 try {
-    return { status: "ok", data: await TAURI_INVOKE("add_repository", { localPath, createdAt }) };
+    return { status: "ok", data: await TAURI_INVOKE("add_repository_from_path", { localPath }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
 },
-async getRepositories() : Promise<Result<Repository[], null>> {
+async setOpenRepository(id: number | null) : Promise<Result<null, null>> {
 try {
-    return { status: "ok", data: await TAURI_INVOKE("get_repositories") };
+    return { status: "ok", data: await TAURI_INVOKE("set_open_repository", { id }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
 },
-async getState() : Promise<Result<State, null>> {
+async getStateData() : Promise<Result<StrandData, null>> {
 try {
-    return { status: "ok", data: await TAURI_INVOKE("get_state") };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
-async setOpenRepository(openRepository: number) : Promise<Result<null, null>> {
-try {
-    return { status: "ok", data: await TAURI_INVOKE("set_open_repository", { openRepository }) };
+    return { status: "ok", data: await TAURI_INVOKE("get_state_data") };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -60,7 +52,7 @@ export type RemoteBranch = {
  */
 name: string[]; hash: GitHash }
 export type Repository = { id: number; name: string; local_path: string; created_at: string; last_opened_at: string | null; last_fetched_at: string | null; has_changes: boolean }
-export type State = { id: number; open_repository: number | null }
+export type StrandData = { repositories: Repository[]; open_repository: Repository | null }
 /**
  * If both are 0, it's in sync. If None, the tracked upstream is missing.
  */

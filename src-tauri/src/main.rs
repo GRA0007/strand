@@ -5,14 +5,16 @@ use std::fs::create_dir_all;
 
 use serde::{Deserialize, Serialize};
 use specta::{ts::ExportConfig, Type};
-use sqlx::{migrate::MigrateDatabase, Pool, Sqlite, SqlitePool};
-use tauri::{async_runtime::Mutex, Manager};
+use sqlx::{migrate::MigrateDatabase, Sqlite, SqlitePool};
+use state::StrandState;
+use tauri::Manager;
 use tauri_specta::{collect_commands, collect_events, ts, Event};
-
-use crate::commands::*;
 
 pub mod commands;
 pub mod helpers;
+pub mod state;
+
+use crate::commands::*;
 
 #[derive(Debug, Serialize, Type)]
 struct GitHash(String);
@@ -30,17 +32,14 @@ impl TryFrom<String> for GitHash {
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
 struct GitCommandEvent(String);
 
-pub struct DbPool(Mutex<Pool<Sqlite>>);
-
 fn main() {
     let (invoke_handler, register_events) = {
         let builder = ts::builder()
             .commands(collect_commands!(
                 get_branches::get_branches,
-                repository::add_repository,
-                repository::get_repositories,
-                state::get_state,
-                state::set_open_repository,
+                repository::add_repository_from_path,
+                repository::set_open_repository,
+                get_state::get_state_data,
             ))
             .events(collect_events!(GitCommandEvent))
             .config(ExportConfig::new().bigint(specta::ts::BigIntExportBehavior::Number));
@@ -72,7 +71,13 @@ fn main() {
                 // Run migrations
                 sqlx::migrate!().run(&pool).await?;
 
-                app.manage(DbPool(Mutex::new(pool)));
+                // Load into app state and manage with Tauri
+                let state = StrandState::new(pool);
+                {
+                    let mut inner_state = state.0.lock().await;
+                    inner_state.load().await?;
+                }
+                app.manage(state);
 
                 Ok(())
             })

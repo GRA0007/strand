@@ -1,10 +1,9 @@
 use std::{ffi::OsStr, process::Command};
 
-use sqlx::Row;
 use tauri::Manager;
 use tauri_specta::Event;
 
-use crate::{DbPool, GitCommandEvent};
+use crate::{state::StrandState, GitCommandEvent};
 
 pub struct GitCommand {
     command: String,
@@ -40,20 +39,20 @@ impl GitCommand {
     }
 
     pub async fn run(&self, app_handle: &tauri::AppHandle) -> String {
-        let pool = app_handle.state::<DbPool>();
-        let pool = pool.0.lock().await;
-        let open_repository = sqlx::query(
-            "
-SELECT repository.local_path as local_path
-    FROM state
-    LEFT JOIN repository ON state.open_repository = repository.id
-        ",
-        )
-        .fetch_one(&*pool)
-        .await
-        .unwrap();
-        drop(pool);
-        let local_path: &str = open_repository.try_get("local_path").unwrap();
+        let state = app_handle.state::<StrandState>();
+        let local_path = state
+            .0
+            .lock()
+            .await
+            .data
+            .open_repository
+            .as_ref()
+            .map(|repo| repo.local_path.clone())
+            .ok_or(())
+            .unwrap();
+        // TODO: can I unlock the mutex after grabbing the path? Git command may take a while
+
+        // TODO: handle if no repo is open
 
         let mut cmd = Command::new("git");
         cmd.arg(&self.command);
