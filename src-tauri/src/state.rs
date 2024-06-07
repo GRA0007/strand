@@ -6,7 +6,7 @@ use specta::Type;
 use sqlx::{prelude::FromRow, Pool, Sqlite};
 use tokio::sync::Mutex;
 
-#[derive(FromRow, Serialize, Clone, Type)]
+#[derive(FromRow, Serialize, Clone, Type, Debug)]
 pub struct Repository {
     pub id: i64,
     pub name: String,
@@ -45,16 +45,10 @@ impl InnerState {
             .fetch_all(&self.pool)
             .await?;
 
-        self.data.open_repository = sqlx::query_as(
-            "
-SELECT repository FROM state
-LEFT JOIN repository ON state.open_repository_id = repository.id
-WHERE state.id = 0
-            ",
-        )
-        .fetch_one(&self.pool)
-        .await
-        .ok();
+        self.data.open_repository = sqlx::query_as("SELECT * FROM repository WHERE id IN (SELECT open_repository_id FROM state WHERE id = 0)")
+            .fetch_one(&self.pool)
+            .await
+            .ok();
 
         Ok(())
     }
