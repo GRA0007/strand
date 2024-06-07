@@ -31,9 +31,10 @@ jobs:
 
   clippy:
     runs-on: ubuntu-latest
-    env:
-      RUSTFLAGS: "-Dwarnings" # Fail on warnings
     steps:
       - uses: actions/checkout@v4
-      - run: cargo clippy
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - run: cargo clippy --all-targets -- -D warnings
         working-directory: src-tauri
