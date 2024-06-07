@@ -37,7 +37,11 @@ export const BranchListPanel = ({ title, icon, actions, className, items, ...pro
 
 const Items = ({ tree, level }: { tree: Tree; level: number }) => {
   return Object.entries(tree).map(([name, item]) =>
-    isItem(item) ? <BranchItem item={item} level={level} /> : <FolderItem name={name} tree={item} level={level} />,
+    isItem(item) ? (
+      <BranchItem key={item.path.join('/')} item={item} level={level} />
+    ) : (
+      <FolderItem key={name} name={name} tree={item} level={level} />
+    ),
   )
 }
 

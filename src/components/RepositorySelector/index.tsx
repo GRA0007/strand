@@ -38,6 +38,7 @@ export const RepositorySelector = () => {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['repositories'] })
       await queryClient.invalidateQueries({ queryKey: ['state'] })
+      await queryClient.invalidateQueries({ queryKey: ['branches'] })
     },
     onError: () => {
       console.error('Failed')
@@ -48,6 +49,7 @@ export const RepositorySelector = () => {
     mutationFn: (id: number) => commands.setOpenRepository(id),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['state'] })
+      await queryClient.invalidateQueries({ queryKey: ['branches'] })
     },
   })
 
