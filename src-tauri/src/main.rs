@@ -73,10 +73,7 @@ fn main() {
 
                 // Load into app state and manage with Tauri
                 let state = StrandState::new(pool);
-                {
-                    let mut inner_state = state.0.lock().await;
-                    inner_state.load().await?;
-                }
+                state.load().await?;
                 app.manage(state);
 
                 Ok(())
@@ -89,7 +86,6 @@ fn main() {
                 // Close database connection
                 tauri::async_runtime::block_on(async move {
                     let state: tauri::State<StrandState> = app.state();
-                    let state = state.0.lock().await;
                     state.pool.close().await;
                 });
             }

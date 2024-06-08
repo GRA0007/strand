@@ -19,7 +19,6 @@ pub async fn add_repository_from_path(
         .filter(|meta| meta.is_dir())
         .ok_or(())?;
 
-    let mut state = state.0.lock().await;
     let repository = state.add_repository(local_path).await.unwrap();
     state
         .set_open_repository(Some(repository.id))
@@ -35,8 +34,6 @@ pub async fn set_open_repository(
     state: tauri::State<'_, StrandState>,
     id: Option<i64>,
 ) -> Result<(), ()> {
-    let mut state = state.0.lock().await;
-
     state.set_open_repository(id).await.unwrap();
 
     Ok(())

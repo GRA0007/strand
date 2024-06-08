@@ -41,16 +41,14 @@ impl GitCommand {
     pub async fn run(&self, app_handle: &tauri::AppHandle) -> String {
         let state = app_handle.state::<StrandState>();
         let local_path = state
-            .0
+            .data
             .lock()
             .await
-            .data
             .open_repository
             .as_ref()
             .map(|repo| repo.local_path.clone())
             .ok_or(())
             .expect("No repo open");
-        // TODO: can I unlock the mutex after grabbing the path? Git command may take a while
 
         // TODO: handle if no repo is open
 

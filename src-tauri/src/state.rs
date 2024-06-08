@@ -23,29 +23,27 @@ pub struct StrandData {
     pub open_repository: Option<Repository>,
 }
 
-pub struct InnerState {
+pub struct StrandState {
     pub pool: Pool<Sqlite>,
-    pub data: StrandData,
+    pub data: Mutex<StrandData>,
 }
-
-pub struct StrandState(pub Mutex<InnerState>);
 
 impl StrandState {
     pub fn new(pool: Pool<Sqlite>) -> Self {
-        Self(Mutex::new(InnerState {
+        Self {
             pool,
             data: Default::default(),
-        }))
+        }
     }
-}
 
-impl InnerState {
-    pub async fn load(&mut self) -> Result<(), sqlx::Error> {
-        self.data.repositories = sqlx::query_as("SELECT * FROM repository")
+    pub async fn load(&self) -> Result<(), sqlx::Error> {
+        let mut data = self.data.lock().await;
+
+        data.repositories = sqlx::query_as("SELECT * FROM repository")
             .fetch_all(&self.pool)
             .await?;
 
-        self.data.open_repository = sqlx::query_as("SELECT * FROM repository WHERE id IN (SELECT open_repository_id FROM state WHERE id = 0)")
+        data.open_repository = sqlx::query_as("SELECT * FROM repository WHERE id IN (SELECT open_repository_id FROM state WHERE id = 0)")
             .fetch_one(&self.pool)
             .await
             .ok();
@@ -53,7 +51,9 @@ impl InnerState {
         Ok(())
     }
 
-    pub async fn add_repository(&mut self, local_path: PathBuf) -> Result<Repository, sqlx::Error> {
+    pub async fn add_repository(&self, local_path: PathBuf) -> Result<Repository, sqlx::Error> {
+        let mut data = self.data.lock().await;
+
         let insert_res = sqlx::query("INSERT INTO repository (name, local_path) VALUES (?, ?)")
             .bind(
                 local_path
@@ -70,14 +70,16 @@ impl InnerState {
             .fetch_one(&self.pool)
             .await?;
 
-        self.data.repositories.push(repository.clone());
+        data.repositories.push(repository.clone());
 
         Ok(repository)
     }
 
-    pub async fn set_open_repository(&mut self, id: Option<i64>) -> Result<(), sqlx::Error> {
+    pub async fn set_open_repository(&self, id: Option<i64>) -> Result<(), sqlx::Error> {
+        let mut data = self.data.lock().await;
+
         // Repository is already set
-        if match self.data.open_repository.as_ref() {
+        if match data.open_repository.as_ref() {
             Some(repo) => id.is_some_and(|id| id == repo.id),
             None => id.is_none(),
         } {
@@ -97,7 +99,7 @@ impl InnerState {
                 .await?;
         }
 
-        self.data.open_repository = match id {
+        data.open_repository = match id {
             Some(id) => Some(
                 sqlx::query_as("SELECT * FROM repository WHERE id = ?")
                     .bind(id)
