@@ -1,11 +1,11 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::fs::create_dir_all;
+use std::{fs::create_dir_all, str::FromStr};
 
 use serde::{Deserialize, Serialize};
 use specta::{ts::ExportConfig, Type};
-use sqlx::{migrate::MigrateDatabase, Sqlite, SqlitePool};
+use sqlx::{sqlite::SqliteConnectOptions, SqlitePool};
 use state::StrandState;
 use tauri::{Manager, RunEvent};
 use tauri_specta::{collect_commands, collect_events, ts, Event};
@@ -63,10 +63,12 @@ fn main() {
 
             tauri::async_runtime::block_on(async move {
                 // Create DB and connect
-                if !Sqlite::database_exists(&db_url).await.unwrap_or(false) {
-                    Sqlite::create_database(&db_url).await?;
-                }
-                let pool = SqlitePool::connect(&db_url).await?;
+                let pool = SqlitePool::connect_with(
+                    SqliteConnectOptions::from_str(&db_url)
+                        .unwrap()
+                        .create_if_missing(true),
+                )
+                .await?;
 
                 // Run migrations
                 sqlx::migrate!().run(&pool).await?;

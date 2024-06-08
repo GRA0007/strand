@@ -1,0 +1,56 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT * FROM repository WHERE id IN (SELECT open_repository_id FROM state WHERE id = 0)",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "name",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "local_path",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 3,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "last_opened_at",
+        "ordinal": 4,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "last_fetched_at",
+        "ordinal": 5,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "has_changes",
+        "ordinal": 6,
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "63bfdf58034c487c653da94ba144286214d874b6bf7672048086d0c6716a4f1f"
+}

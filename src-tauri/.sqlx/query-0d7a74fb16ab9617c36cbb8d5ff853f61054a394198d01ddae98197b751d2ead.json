@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE state SET open_repository_id = ? WHERE id = 0",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "0d7a74fb16ab9617c36cbb8d5ff853f61054a394198d01ddae98197b751d2ead"
+}

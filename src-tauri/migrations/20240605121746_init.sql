@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS repository (
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   last_opened_at DATETIME,
   last_fetched_at DATETIME,
-  has_changes BOOLEAN
+  has_changes BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS state (
