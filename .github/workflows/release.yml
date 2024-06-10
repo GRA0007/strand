@@ -29,6 +29,12 @@ jobs:
           command: version-or-publish
           createRelease: true
           draftRelease: true
+      - name: set Cargo.toml version
+        run: |
+          sed -i 's/^version = .*/version = "${{ steps.covector.outputs.version-strand }}"/' Cargo.toml
+          cargo update -w
+        working-directory: src-tauri
+        if: steps.covector.outputs.commandRan == 'version'
       - name: create pr
         uses: peter-evans/create-pull-request@v6
         if: steps.covector.outputs.commandRan == 'version'
@@ -75,6 +81,7 @@ jobs:
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CI: false
         with:
           releaseId: ${{ needs.covector.outputs.releaseId }}
           args: ${{ matrix.args }}
