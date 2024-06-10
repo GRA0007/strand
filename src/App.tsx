@@ -46,7 +46,7 @@ export const App = () => {
               />
 
               <Panel className="bg-surface rounded-lg" minSize={30}>
-                tree
+                tree (todo)
               </Panel>
 
               <PanelResizeHandle className="w-4" onDoubleClick={() => rightPanelRef.current?.resize(30)} />
@@ -55,7 +55,7 @@ export const App = () => {
                 <PanelGroup direction="vertical">
                   <Panel className="bg-surface rounded-lg rounded-b-none" defaultSize={15}>
                     <div className="overflow-y-auto h-full px-3 py-2">
-                      <div>commit message</div>
+                      <div>commit message (todo)</div>
                       <div className="text-xs pt-2">commit description</div>
                     </div>
                   </Panel>

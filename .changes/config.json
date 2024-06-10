@@ -1,0 +1,20 @@
+{
+  "gitSiteUrl": "https://www.github.com/GRA0007/strand/",
+  "changeTags": {
+    "feat": "New Features",
+    "fix": "Bug Fixes",
+    "perf": "Performance Improvements"
+  },
+  "packages": {
+    "strand": {
+      "releaseTag": "v${ pkgFile.version }",
+      "getPublishedVersion": {
+        "use": "fetch:check",
+        "options": {
+          "url": "https://github.com/GRA0007/strand/releases/tag/v${ pkg.pkgFile.version }"
+        }
+      },
+      "publish": "echo publish"
+    }
+  }
+}
