@@ -1,9 +1,30 @@
-use std::{ffi::OsStr, process::Command};
+use std::{ffi::OsStr, io, process::Command};
 
+use specta::Type;
 use tauri::Manager;
 use tauri_specta::Event;
+use thiserror::Error;
 
 use crate::{state::StrandState, GitCommandEvent};
+
+pub mod local_branches;
+pub mod remote_branches;
+
+#[derive(Error, Debug, Type)]
+pub enum GitError {
+    #[error(transparent)]
+    Io(
+        #[serde(skip)]
+        #[from]
+        io::Error,
+    ),
+    #[error("git command returned an error: {0}")]
+    Unsuccessful(String),
+    #[error("no repository open")]
+    NoRepoOpen,
+    #[error("not a valid repository")]
+    NotARepository,
+}
 
 pub struct GitCommand {
     command: String,
@@ -38,7 +59,7 @@ impl GitCommand {
             .join("%00")
     }
 
-    pub async fn run(&self, app_handle: &tauri::AppHandle) -> String {
+    pub async fn run(&self, app_handle: &tauri::AppHandle) -> Result<String, GitError> {
         let state = app_handle.state::<StrandState>();
         let local_path = state
             .data
@@ -47,10 +68,7 @@ impl GitCommand {
             .open_repository
             .as_ref()
             .map(|repo| repo.local_path.clone())
-            .ok_or(())
-            .expect("No repo open");
-
-        // TODO: handle if no repo is open
+            .ok_or(GitError::NoRepoOpen)?;
 
         let mut cmd = Command::new("git");
         cmd.arg(&self.command);
@@ -58,9 +76,11 @@ impl GitCommand {
             cmd.arg(arg);
         }
         cmd.current_dir(local_path);
-        let output = cmd.output().unwrap();
+        let output = cmd.output()?;
         if !output.status.success() {
-            panic!("Git command failed");
+            return Err(GitError::Unsuccessful(
+                String::from_utf8(output.stderr).expect("Failed to parse error as utf8"),
+            ));
         }
 
         // Emit event
@@ -71,12 +91,12 @@ impl GitCommand {
             .join(OsStr::new(" "));
         GitCommandEvent(format!(
             "{} {}",
-            program.to_str().unwrap(),
-            args.to_str().unwrap()
+            program.to_string_lossy(),
+            args.to_string_lossy()
         ))
         .emit(app_handle)
-        .unwrap();
+        .expect("Failed to emit event");
 
-        String::from_utf8(output.stdout).unwrap()
+        Ok(String::from_utf8(output.stdout).expect("Failed to parse as utf8"))
     }
 }

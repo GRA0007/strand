@@ -1,46 +1,42 @@
 import { DropdownMenu, DropdownMenuTrigger } from '@radix-ui/react-dropdown-menu'
 import { Tooltip, TooltipTrigger } from '@radix-ui/react-tooltip'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { open } from '@tauri-apps/plugin-dialog'
 import { CheckIcon, ChevronDownIcon, CopyIcon, FolderIcon, PlusIcon } from 'lucide-react'
 import { commands } from '../../bindings'
 import { cn } from '../../utils/cn'
+import { useCommandMutation } from '../../utils/useCommandMutation'
+import { useCommandQuery } from '../../utils/useCommandQuery'
 import { DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '../DropdownMenu'
 import { TooltipContent } from '../Tooltip'
 
 export const RepositorySelector = () => {
   const queryClient = useQueryClient()
 
-  const { data: state } = useQuery({
+  const { data: state } = useCommandQuery({
     queryKey: ['state'],
-    queryFn: () =>
-      commands.getStateData().then((res) => {
-        if (res.status === 'error') throw res.error
-        return res.data
-      }),
+    queryFn: commands.getStateData,
   })
 
-  const addRepository = useMutation({
-    mutationFn: (localPath: string) =>
-      commands.addRepositoryFromPath(localPath).then((res) => {
-        if (res.status === 'error') throw res.error
-        return res.data
-      }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['state'] })
-      await queryClient.invalidateQueries({ queryKey: ['branches'] })
-    },
+  const addRepository = useCommandMutation({
+    mutationFn: commands.addRepositoryFromPath,
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['state'] }),
+        queryClient.invalidateQueries({ queryKey: ['branches'] }),
+      ]),
     onError: () => {
       console.error('Failed')
     },
   })
 
-  const setOpenRepository = useMutation({
-    mutationFn: (id: number) => commands.setOpenRepository(id),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['state'] })
-      await queryClient.invalidateQueries({ queryKey: ['branches'] })
-    },
+  const setOpenRepository = useCommandMutation({
+    mutationFn: commands.setOpenRepository,
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['state'] }),
+        queryClient.invalidateQueries({ queryKey: ['branches'] }),
+      ]),
   })
 
   return (
@@ -53,10 +49,7 @@ export const RepositorySelector = () => {
         {state?.repositories?.map((repo) => (
           <DropdownMenuItem
             key={repo.name}
-            className={cn(
-              'justify-end pl-3 text-base gap-2',
-              state?.open_repository?.id === repo.id && 'font-semibold',
-            )}
+            className={cn('justify-end pl-3 text-base gap-2', state.open_repository?.id === repo.id && 'font-semibold')}
             onClick={() => {
               setOpenRepository.mutate(repo.id)
             }}

@@ -6,7 +6,14 @@ import { events } from './bindings'
 import { Branches } from './components/Branches'
 import { Toolbar } from './components/Toolbar'
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: false,
+    },
+  },
+})
 
 export const App = () => {
   const leftPanelRef = useRef<ImperativePanelHandle>(null)

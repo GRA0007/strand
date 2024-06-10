@@ -10,24 +10,10 @@ use state::StrandState;
 use tauri::{Manager, RunEvent};
 use tauri_specta::{collect_commands, collect_events, ts, Event};
 
+pub mod cli;
 pub mod commands;
-pub mod helpers;
 pub mod state;
-
-use crate::commands::*;
-
-#[derive(Debug, Serialize, Type)]
-struct GitHash(String);
-
-impl TryFrom<String> for GitHash {
-    type Error = ();
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        if value.len() != 40 {
-            return Err(());
-        }
-        Ok(Self(value))
-    }
-}
+pub mod structures;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
 struct GitCommandEvent(String);
@@ -36,10 +22,10 @@ fn main() {
     let (invoke_handler, register_events) = {
         let builder = ts::builder()
             .commands(collect_commands!(
-                get_branches::get_branches,
-                repository::add_repository_from_path,
-                repository::set_open_repository,
-                get_state::get_state_data,
+                commands::get_branches::get_branches,
+                commands::add_repository_from_path::add_repository_from_path,
+                commands::set_open_repository::set_open_repository,
+                commands::get_state_data::get_state_data,
             ))
             .events(collect_events!(GitCommandEvent))
             .config(ExportConfig::new().bigint(specta::ts::BigIntExportBehavior::Number));

@@ -1,5 +1,4 @@
 import { Tooltip, TooltipTrigger } from '@radix-ui/react-tooltip'
-import { useQuery } from '@tanstack/react-query'
 import {
   CircleDashedIcon,
   CircleIcon,
@@ -11,24 +10,22 @@ import {
 } from 'lucide-react'
 import { PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 import { type UpstreamTrack, commands } from '../../bindings'
+import { useCommandQuery } from '../../utils/useCommandQuery'
 import { BranchListPanel } from '../BranchListPanel'
 import { IconButton } from '../IconButton'
 import { TooltipContent } from '../Tooltip'
 
 export const Branches = () => {
-  const { data: state } = useQuery({
+  const { data: state } = useCommandQuery({
     queryKey: ['state'],
-    queryFn: () =>
-      commands.getStateData().then((res) => {
-        if (res.status === 'error') throw res.error
-        return res.data
-      }),
+    queryFn: commands.getStateData,
   })
 
-  const { data } = useQuery({
+  const { data } = useCommandQuery({
     queryKey: ['branches'],
     enabled: Boolean(state?.open_repository),
-    queryFn: () => commands.getBranches(),
+    queryFn: commands.getBranches,
+    refetchOnWindowFocus: true,
   })
 
   return (
