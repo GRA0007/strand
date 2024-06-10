@@ -15,12 +15,13 @@
   --color-surface: #282828;
 }
 
-/* @media (prefers-color-scheme: light) {
+@media (prefers-color-scheme: light) {
   :root {
     --color-background: #FFFFFF;
     --color-foreground: #000000;
+    --color-surface: #EEEEEE;
   }
-} */
+}
 
 @layer utilities {
   .slant {

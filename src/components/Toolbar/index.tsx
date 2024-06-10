@@ -42,7 +42,7 @@ export const Toolbar = () => {
         <GitBranchPlusIcon />
       </IconButton>
 
-      <div className="w-px bg-white/20 mx-2 self-stretch" />
+      <div className="w-px bg-foreground/20 mx-2 self-stretch" />
 
       <IconButton tooltip="Undo">
         <UndoIcon />
@@ -54,7 +54,7 @@ export const Toolbar = () => {
       <div className="relative group ml-4">
         <SearchIcon className="h-4 w-4 absolute left-2 top-2 opacity-50 group-focus-within:opacity-100" />
         <input
-          className="bg-white/10 rounded h-8 px-2 pl-8 text-sm outline-none border-none w-[170px]"
+          className="bg-foreground/10 rounded h-8 px-2 pl-8 text-sm outline-none border-none w-[170px]"
           placeholder="Search..."
         />
       </div>
