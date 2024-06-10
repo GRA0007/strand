@@ -10,12 +10,7 @@
       "version": true,
       "path": ".",
       "releaseTag": "v${ pkgFile.version }",
-      "getPublishedVersion": {
-        "use": "fetch:check",
-        "options": {
-          "url": "https://github.com/GRA0007/strand/releases/tag/v${ pkg.pkgFile.version }"
-        }
-      },
+      "getPublishedVersion": "curl -s https://api.github.com/repos/GRA0007/strand/releases/latest | jq -r '.tag_name[1:]'",
       "publish": "echo publish"
     }
   }
