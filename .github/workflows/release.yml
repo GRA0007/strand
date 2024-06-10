@@ -52,14 +52,12 @@ jobs:
             args: '--target x86_64-apple-darwin'
           - platform: ubuntu-22.04
             args: ''
-          - platform: windows-latest
-            args: ''
+          # - platform: windows-latest
+          #   args: ''
 
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
-      - run: npm install -g corepack
-        if: matrix.platform == 'windows-latest'
       - run: corepack enable
       - uses: actions/setup-node@v4
         with:
