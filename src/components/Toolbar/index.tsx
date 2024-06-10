@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import {
   ArrowDownToLineIcon,
   ArrowUpFromLineIcon,
@@ -8,14 +9,28 @@ import {
   SettingsIcon,
   UndoIcon,
 } from 'lucide-react'
+import { commands } from '../../bindings'
+import { cn } from '../../utils/cn'
+import { useCommandMutation } from '../../utils/useCommandMutation'
 import { IconButton } from '../IconButton'
 import { RepositorySelector } from '../RepositorySelector'
 
 export const Toolbar = () => {
+  const queryClient = useQueryClient()
+
+  const fetchAll = useCommandMutation({
+    mutationFn: commands.gitFetch,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['branches'] }),
+  })
+
   return (
     <nav className="flex gap-3 items-center">
-      <IconButton tooltip="Fetch">
-        <RefreshCwIcon />
+      <IconButton
+        tooltip={fetchAll.isPending ? 'Fetching...' : 'Fetch'}
+        onClick={() => fetchAll.mutate()}
+        disabled={fetchAll.isPending}
+      >
+        <RefreshCwIcon className={cn(fetchAll.isPending && 'animate-spin')} />
       </IconButton>
       <IconButton tooltip="Pull (fast-forward if possible)">
         <ArrowDownToLineIcon />

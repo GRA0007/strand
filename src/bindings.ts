@@ -35,6 +35,14 @@ try {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+async gitFetch() : Promise<Result<null, CommandError>> {
+try {
+    return { status: "ok", data: await TAURI_INVOKE("git_fetch") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 

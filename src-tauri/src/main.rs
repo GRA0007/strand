@@ -26,6 +26,7 @@ fn main() {
                 commands::add_repository_from_path::add_repository_from_path,
                 commands::set_open_repository::set_open_repository,
                 commands::get_state_data::get_state_data,
+                commands::git_fetch::git_fetch,
             ))
             .events(collect_events!(GitCommandEvent))
             .config(ExportConfig::new().bigint(specta::ts::BigIntExportBehavior::Number));

@@ -8,12 +8,6 @@ use crate::{
 
 use super::{CommandError, CommandResult};
 
-#[derive(Debug, Serialize, Type)]
-pub struct Branches {
-    local: Vec<LocalBranch>,
-    remote: Vec<RemoteBranch>,
-}
-
 const LOCAL_BRANCH_FIELDS: &[&str] = &[
     "HEAD",
     "refname:short",
@@ -51,6 +45,12 @@ async fn remote_branches(app_handle: &tauri::AppHandle) -> CommandResult<Vec<Rem
         .into_iter()
         .filter(|branch| branch.name.last() != Some(&"HEAD".to_owned()))
         .collect())
+}
+
+#[derive(Debug, Serialize, Type)]
+pub struct Branches {
+    local: Vec<LocalBranch>,
+    remote: Vec<RemoteBranch>,
 }
 
 #[tauri::command]
