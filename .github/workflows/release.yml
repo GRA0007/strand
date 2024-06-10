@@ -59,10 +59,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: corepack enable
+        if: matrix.platform != 'windows-latest'
+      - run: corepack enable
+        if: matrix.platform == 'windows-latest'
+        shell: cmd
       - uses: actions/setup-node@v4
         with:
-          cache: ${{ matrix.platform == 'windows-latest' && '' || 'yarn' }}
-      - run: corepack enable
+          cache: yarn
       - uses: dtolnay/rust-toolchain@stable
         with:
           # targets only needed on mac builds
