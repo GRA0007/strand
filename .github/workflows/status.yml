@@ -1,4 +1,4 @@
-name: status
+name: Status
 
 on: pull_request
 
