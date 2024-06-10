@@ -29,6 +29,15 @@ jobs:
           command: version-or-publish
           createRelease: true
           draftRelease: true
+      - name: create pr
+        uses: peter-evans/create-pull-request@v6
+        if: steps.covector.outputs.commandRan == 'version'
+        with:
+          title: Publish New Version
+          commit-message: Publish new version
+          labels: release
+          branch: release
+          body: ${{ steps.covector.outputs.change }}
 
   build:
     needs: covector
