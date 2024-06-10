@@ -1,14 +1,12 @@
-use std::{ffi::OsStr, io, process::Command};
+use std::io;
 
 use specta::Type;
 use tauri::Manager;
 use tauri_specta::Event;
 use thiserror::Error;
+use tokio::process::Command;
 
 use crate::{state::StrandState, GitCommandEvent};
-
-pub mod local_branches;
-pub mod remote_branches;
 
 #[derive(Error, Debug, Type)]
 pub enum GitError {
@@ -35,7 +33,7 @@ impl GitCommand {
     pub fn new(command: &str) -> Self {
         Self {
             command: command.into(),
-            args: vec![],
+            args: Vec::default(),
         }
     }
 
@@ -76,7 +74,7 @@ impl GitCommand {
             cmd.arg(arg);
         }
         cmd.current_dir(local_path);
-        let output = cmd.output()?;
+        let output = cmd.output().await?;
         if !output.status.success() {
             return Err(GitError::Unsuccessful(
                 String::from_utf8(output.stderr).expect("Failed to parse error as utf8"),
@@ -84,18 +82,9 @@ impl GitCommand {
         }
 
         // Emit event
-        let program = cmd.get_program();
-        let args = cmd
-            .get_args()
-            .collect::<Vec<&OsStr>>()
-            .join(OsStr::new(" "));
-        GitCommandEvent(format!(
-            "{} {}",
-            program.to_string_lossy(),
-            args.to_string_lossy()
-        ))
-        .emit(app_handle)
-        .expect("Failed to emit event");
+        GitCommandEvent(format!("{} {}", &self.command, self.args.join(" ")))
+            .emit(app_handle)
+            .expect("Failed to emit event");
 
         Ok(String::from_utf8(output.stdout).expect("Failed to parse as utf8"))
     }
