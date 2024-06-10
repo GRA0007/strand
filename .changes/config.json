@@ -7,6 +7,8 @@
   },
   "packages": {
     "strand": {
+      "version": true,
+      "path": ".",
       "releaseTag": "v${ pkgFile.version }",
       "getPublishedVersion": {
         "use": "fetch:check",
