@@ -54,7 +54,7 @@ export const Toolbar = () => {
       <div className="relative group ml-4">
         <SearchIcon className="h-4 w-4 absolute left-2 top-2 opacity-50 group-focus-within:opacity-100" />
         <input
-          className="bg-foreground/10 rounded h-8 px-2 pl-8 text-sm outline-none border-none w-[170px]"
+          className="bg-foreground/10 rounded-md h-8 px-2 pl-8 text-sm outline-none border-none w-[170px]"
           placeholder="Search..."
         />
       </div>

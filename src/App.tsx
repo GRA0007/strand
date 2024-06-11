@@ -35,7 +35,7 @@ export const App = () => {
                 onDoubleClick={() => leftPanelRef.current?.resize(20)}
               />
 
-              <Panel className="bg-surface rounded-lg" minSize={30}>
+              <Panel className="bg-surface rounded-md" minSize={30}>
                 tree (todo)
               </Panel>
 
@@ -43,14 +43,14 @@ export const App = () => {
 
               <Panel defaultSize={30} minSize={10} ref={rightPanelRef}>
                 <PanelGroup direction="vertical">
-                  <Panel className="bg-surface rounded-lg rounded-b-none" defaultSize={15}>
+                  <Panel className="bg-surface rounded-md rounded-b-none" defaultSize={15}>
                     <div className="overflow-y-auto h-full px-3 py-2">
                       <div>commit message (todo)</div>
                       <div className="text-xs pt-2">commit description</div>
                     </div>
                   </Panel>
 
-                  <PanelResizeHandle className="h-4 bg-surface rounded-b-lg flex items-center justify-center group">
+                  <PanelResizeHandle className="h-4 bg-surface rounded-b-md flex items-center justify-center group">
                     <div className="bg-foreground/20 h-1 w-[40%] rounded-full group-hover:bg-foreground/30 group-active:bg-foreground/40" />
                   </PanelResizeHandle>
 
