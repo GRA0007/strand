@@ -3,20 +3,17 @@
 
 use std::{fs::create_dir_all, str::FromStr};
 
-use serde::{Deserialize, Serialize};
-use specta::{ts::ExportConfig, Type};
+use cli::GitCommandEvent;
+use specta::ts::ExportConfig;
 use sqlx::{sqlite::SqliteConnectOptions, SqlitePool};
 use state::StrandState;
 use tauri::{Manager, RunEvent};
-use tauri_specta::{collect_commands, collect_events, ts, Event};
+use tauri_specta::{collect_commands, collect_events, ts};
 
 pub mod cli;
 pub mod commands;
 pub mod state;
 pub mod structures;
-
-#[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
-struct GitCommandEvent(String);
 
 fn main() {
     let (invoke_handler, register_events) = {

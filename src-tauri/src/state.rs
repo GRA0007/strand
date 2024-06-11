@@ -17,10 +17,19 @@ pub struct Repository {
     pub has_changes: bool,
 }
 
+#[derive(Serialize, Clone, Type, Debug)]
+pub struct GitCommandLog {
+    pub id: i64,
+    pub command: String,
+    pub created_at: NaiveDateTime,
+    pub repository_id: i64,
+}
+
 #[derive(Serialize, Clone, Default, Type)]
 pub struct StrandData {
     pub repositories: Vec<Repository>,
     pub open_repository: Option<Repository>,
+    pub git_command_log: Vec<GitCommandLog>,
 }
 
 pub struct StrandState {
@@ -40,6 +49,10 @@ impl StrandState {
         let mut data = self.data.lock().await;
 
         data.repositories = sqlx::query_as!(Repository, "SELECT * FROM repository")
+            .fetch_all(&self.pool)
+            .await?;
+
+        data.git_command_log = sqlx::query_as!(GitCommandLog, "SELECT * FROM git_command_log")
             .fetch_all(&self.pool)
             .await?;
 
@@ -69,10 +82,9 @@ impl StrandState {
         .await?
         .last_insert_rowid();
 
-        let repository: Repository =
-            sqlx::query_as!(Repository, "SELECT * FROM repository WHERE id = ?", id)
-                .fetch_one(&self.pool)
-                .await?;
+        let repository = sqlx::query_as!(Repository, "SELECT * FROM repository WHERE id = ?", id)
+            .fetch_one(&self.pool)
+            .await?;
 
         data.repositories.push(repository.clone());
 
@@ -114,5 +126,35 @@ impl StrandState {
         };
 
         Ok(())
+    }
+
+    pub async fn add_git_command_log(&self, command: String) -> Result<(), sqlx::Error> {
+        let mut data = self.data.lock().await;
+
+        match &data.open_repository {
+            Some(open_repository) => {
+                let id = sqlx::query!(
+                    "INSERT INTO git_command_log (command, repository_id) VALUES (?, ?)",
+                    command,
+                    open_repository.id
+                )
+                .execute(&self.pool)
+                .await?
+                .last_insert_rowid();
+
+                let git_command_log = sqlx::query_as!(
+                    GitCommandLog,
+                    "SELECT * FROM git_command_log WHERE id = ?",
+                    id
+                )
+                .fetch_one(&self.pool)
+                .await?;
+
+                data.git_command_log.push(git_command_log);
+
+                Ok(())
+            }
+            None => panic!("TODO: handle no open repo"),
+        }
     }
 }

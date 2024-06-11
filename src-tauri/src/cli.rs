@@ -1,12 +1,13 @@
 use std::io;
 
+use serde::{Deserialize, Serialize};
 use specta::Type;
 use tauri::Manager;
 use tauri_specta::Event;
 use thiserror::Error;
 use tokio::process::Command;
 
-use crate::{state::StrandState, GitCommandEvent};
+use crate::state::StrandState;
 
 #[derive(Error, Debug, Type)]
 pub enum GitError {
@@ -16,6 +17,12 @@ pub enum GitError {
         #[from]
         io::Error,
     ),
+    #[error(transparent)]
+    Sqlx(
+        #[serde(skip)]
+        #[from]
+        sqlx::Error,
+    ),
     #[error("git command returned an error: {0}")]
     Unsuccessful(String),
     #[error("no repository open")]
@@ -23,6 +30,9 @@ pub enum GitError {
     #[error("not a valid repository")]
     NotARepository,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
+pub struct GitCommandEvent;
 
 pub struct GitCommand {
     command: String,
@@ -81,8 +91,11 @@ impl GitCommand {
             ));
         }
 
-        // Emit event
-        GitCommandEvent(format!("{} {}", &self.command, self.args.join(" ")))
+        // Log command and emit event
+        state
+            .add_git_command_log(format!("{} {}", &self.command, self.args.join(" ")))
+            .await?;
+        GitCommandEvent
             .emit(app_handle)
             .expect("Failed to emit event");
 

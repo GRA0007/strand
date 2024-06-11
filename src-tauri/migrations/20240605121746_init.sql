@@ -10,8 +10,7 @@ CREATE TABLE IF NOT EXISTS repository (
 
 CREATE TABLE IF NOT EXISTS state (
   id INTEGER PRIMARY KEY NOT NULL,
-  open_repository_id INTEGER,
-  FOREIGN KEY (open_repository_id) REFERENCES repository(id)
+  open_repository_id INTEGER REFERENCES repository(id) ON DELETE SET NULL
 );
 
 INSERT OR IGNORE INTO state (id, open_repository_id) VALUES (0, NULL);
