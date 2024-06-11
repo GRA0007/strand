@@ -29,6 +29,7 @@ pub struct GitCommandLog {
 pub struct StrandData {
     pub repositories: Vec<Repository>,
     pub open_repository: Option<Repository>,
+    /// Contains the git command log of the current open repository
     pub git_command_log: Vec<GitCommandLog>,
 }
 
@@ -52,14 +53,20 @@ impl StrandState {
             .fetch_all(&self.pool)
             .await?;
 
-        data.git_command_log = sqlx::query_as!(GitCommandLog, "SELECT * FROM git_command_log")
-            .fetch_all(&self.pool)
-            .await?;
-
         data.open_repository = sqlx::query_as!(Repository, "SELECT * FROM repository WHERE id IN (SELECT open_repository_id FROM state WHERE id = 0)")
             .fetch_one(&self.pool)
             .await
             .ok();
+
+        if let Some(open_repository_id) = data.open_repository.as_ref().map(|r| r.id) {
+            data.git_command_log = sqlx::query_as!(
+                GitCommandLog,
+                "SELECT * FROM git_command_log WHERE repository_id = ?",
+                open_repository_id
+            )
+            .fetch_all(&self.pool)
+            .await?;
+        }
 
         Ok(())
     }
@@ -125,9 +132,18 @@ impl StrandState {
             None => None,
         };
 
+        data.git_command_log = sqlx::query_as!(
+            GitCommandLog,
+            "SELECT * FROM git_command_log WHERE repository_id = ?",
+            id
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
         Ok(())
     }
 
+    /// Adds a git command log to the currently open repository
     pub async fn add_git_command_log(&self, command: String) -> Result<(), sqlx::Error> {
         let mut data = self.data.lock().await;
 

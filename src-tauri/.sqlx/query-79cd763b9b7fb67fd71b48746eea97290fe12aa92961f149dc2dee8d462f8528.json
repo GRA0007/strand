@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT * FROM git_command_log",
+  "query": "SELECT * FROM git_command_log WHERE repository_id = ?",
   "describe": {
     "columns": [
       {
@@ -25,7 +25,7 @@
       }
     ],
     "parameters": {
-      "Right": 0
+      "Right": 1
     },
     "nullable": [
       false,
@@ -34,5 +34,5 @@
       false
     ]
   },
-  "hash": "02075224dd4f38b3b14c36e2f6822505495a09b82e07deb9da498a051915dcb4"
+  "hash": "79cd763b9b7fb67fd71b48746eea97290fe12aa92961f149dc2dee8d462f8528"
 }
