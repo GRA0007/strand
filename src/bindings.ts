@@ -62,8 +62,9 @@ gitCommandEvent: "git-command-event"
 
 export type Branches = { local: LocalBranch[]; remote: RemoteBranch[] }
 export type CommandError = { Git: GitError } | "Sqlx" | "Parse" | { Other: string }
-export type GitCommandEvent = null
-export type GitCommandLog = { id: number; command: string; created_at: string; repository_id: number }
+export type GitCommandEvent = GitCommandLog
+export type GitCommandLog = { id: number; command: string; command_type: GitCommandType; created_at: string }
+export type GitCommandType = "Query" | "Mutation"
 export type GitError = "Io" | "Sqlx" | { Unsuccessful: string } | "NoRepoOpen" | "NotARepository"
 export type GitHash = string
 export type LocalBranch = { head: boolean; 
@@ -77,11 +78,7 @@ export type RemoteBranch = {
  */
 name: string[]; hash: GitHash }
 export type Repository = { id: number; name: string; local_path: string; created_at: string; last_opened_at: string | null; last_fetched_at: string | null; has_changes: boolean }
-export type StrandData = { repositories: Repository[]; open_repository: Repository | null; 
-/**
- * Contains the git command log of the current open repository
- */
-git_command_log: GitCommandLog[] }
+export type StrandData = { repositories: Repository[]; open_repository: Repository | null }
 /**
  * If both are 0, it's in sync. If None, the tracked upstream is missing.
  */

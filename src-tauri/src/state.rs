@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use chrono::NaiveDateTime;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use specta::Type;
 use sqlx::{Pool, Sqlite};
 use tokio::sync::Mutex;
@@ -17,20 +17,35 @@ pub struct Repository {
     pub has_changes: bool,
 }
 
-#[derive(Serialize, Clone, Type, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, Type)]
+#[repr(i64)]
+pub enum GitCommandType {
+    Query,
+    Mutation,
+}
+
+impl From<i64> for GitCommandType {
+    fn from(value: i64) -> Self {
+        match value {
+            0 => Self::Query,
+            1 => Self::Mutation,
+            _ => panic!("Not a valid git command log type"),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Type, Debug)]
 pub struct GitCommandLog {
     pub id: i64,
     pub command: String,
+    pub command_type: GitCommandType,
     pub created_at: NaiveDateTime,
-    pub repository_id: i64,
 }
 
 #[derive(Serialize, Clone, Default, Type)]
 pub struct StrandData {
     pub repositories: Vec<Repository>,
     pub open_repository: Option<Repository>,
-    /// Contains the git command log of the current open repository
-    pub git_command_log: Vec<GitCommandLog>,
 }
 
 pub struct StrandState {
@@ -57,16 +72,6 @@ impl StrandState {
             .fetch_one(&self.pool)
             .await
             .ok();
-
-        if let Some(open_repository_id) = data.open_repository.as_ref().map(|r| r.id) {
-            data.git_command_log = sqlx::query_as!(
-                GitCommandLog,
-                "SELECT * FROM git_command_log WHERE repository_id = ?",
-                open_repository_id
-            )
-            .fetch_all(&self.pool)
-            .await?;
-        }
 
         Ok(())
     }
@@ -132,43 +137,56 @@ impl StrandState {
             None => None,
         };
 
-        data.git_command_log = sqlx::query_as!(
-            GitCommandLog,
-            "SELECT * FROM git_command_log WHERE repository_id = ?",
-            id
-        )
-        .fetch_all(&self.pool)
-        .await?;
-
         Ok(())
     }
 
     /// Adds a git command log to the currently open repository
-    pub async fn add_git_command_log(&self, command: String) -> Result<(), sqlx::Error> {
-        let mut data = self.data.lock().await;
+    pub async fn add_git_command_log(
+        &self,
+        command: String,
+        command_type: GitCommandType,
+    ) -> Result<GitCommandLog, sqlx::Error> {
+        let data = self.data.lock().await;
 
         match &data.open_repository {
             Some(open_repository) => {
+                let command_type = command_type as i64;
                 let id = sqlx::query!(
-                    "INSERT INTO git_command_log (command, repository_id) VALUES (?, ?)",
+                    "INSERT INTO git_command_log (command, command_type, repository_id) VALUES (?, ?, ?)",
                     command,
+                    command_type,
                     open_repository.id
                 )
                 .execute(&self.pool)
                 .await?
                 .last_insert_rowid();
 
-                let git_command_log = sqlx::query_as!(
+                sqlx::query_as!(
                     GitCommandLog,
-                    "SELECT * FROM git_command_log WHERE id = ?",
+                    "SELECT id, command, command_type, created_at FROM git_command_log WHERE id = ?",
                     id
                 )
                 .fetch_one(&self.pool)
-                .await?;
+                .await
+            }
+            None => panic!("TODO: handle no open repo"),
+        }
+    }
 
-                data.git_command_log.push(git_command_log);
+    /// Get the full git command log history for the open repository
+    pub async fn get_git_command_log(&self) -> Result<Vec<GitCommandLog>, sqlx::Error> {
+        let data = self.data.lock().await;
 
-                Ok(())
+        match &data.open_repository.as_ref().map(|r| r.id) {
+            Some(open_repository_id) => {
+                sqlx::query_as!(
+                    GitCommandLog,
+                    // TODO: sort by date, and paginate
+                    "SELECT id, command, command_type, created_at FROM git_command_log WHERE repository_id = ?",
+                    open_repository_id
+                )
+                .fetch_all(&self.pool)
+                .await
             }
             None => panic!("TODO: handle no open repo"),
         }

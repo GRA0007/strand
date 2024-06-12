@@ -7,7 +7,7 @@ use tauri_specta::Event;
 use thiserror::Error;
 use tokio::process::Command;
 
-use crate::state::StrandState;
+use crate::state::{GitCommandLog, GitCommandType, StrandState};
 
 #[derive(Error, Debug, Type)]
 pub enum GitError {
@@ -32,7 +32,7 @@ pub enum GitError {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
-pub struct GitCommandEvent;
+pub struct GitCommandEvent(GitCommandLog);
 
 pub struct GitCommand {
     command: String,
@@ -67,7 +67,11 @@ impl GitCommand {
             .join("%00")
     }
 
-    pub async fn run(&self, app_handle: &tauri::AppHandle) -> Result<String, GitError> {
+    pub async fn run(
+        &self,
+        app_handle: &tauri::AppHandle,
+        command_type: GitCommandType,
+    ) -> Result<String, GitError> {
         let state = app_handle.state::<StrandState>();
         let local_path = state
             .data
@@ -92,12 +96,16 @@ impl GitCommand {
         }
 
         // Log command and emit event
-        state
-            .add_git_command_log(format!("{} {}", &self.command, self.args.join(" ")))
-            .await?;
-        GitCommandEvent
-            .emit(app_handle)
-            .expect("Failed to emit event");
+        GitCommandEvent(
+            state
+                .add_git_command_log(
+                    format!("{} {}", &self.command, self.args.join(" ")),
+                    command_type,
+                )
+                .await?,
+        )
+        .emit(app_handle)
+        .expect("Failed to emit event");
 
         Ok(String::from_utf8(output.stdout).expect("Failed to parse as utf8"))
     }

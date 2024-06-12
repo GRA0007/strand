@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT * FROM git_command_log WHERE id = ?",
+  "query": "SELECT id, command, command_type, created_at FROM git_command_log WHERE id = ?",
   "describe": {
     "columns": [
       {
@@ -14,14 +14,14 @@
         "type_info": "Text"
       },
       {
-        "name": "created_at",
+        "name": "command_type",
         "ordinal": 2,
-        "type_info": "Datetime"
+        "type_info": "Int64"
       },
       {
-        "name": "repository_id",
+        "name": "created_at",
         "ordinal": 3,
-        "type_info": "Int64"
+        "type_info": "Datetime"
       }
     ],
     "parameters": {
@@ -34,5 +34,5 @@
       false
     ]
   },
-  "hash": "d5d04046f9beb9f267a49592c9c6163bbe8fc1c08d9b54e7c27b0a077acffd84"
+  "hash": "9cccfc355c6e98908276b5797e6d144030d8bda017a52a459d8d20551a460378"
 }
