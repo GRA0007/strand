@@ -10,6 +10,12 @@
 
 Strand intends to be a simple but powerful graphical user interface for [Git](https://www.git-scm.com/).
 
+## Principles
+
+- Strand is designed to use only native git cli commands to interface with your repositories. This has the benefit of being able to support every git feature, as well as show a log of commands it has run.
+- As a git GUI, Strand attempts to simplify complex git functionality, with the aid of the visuals. This includes functionality like auto-fetch, undo/redo, and the git graph.
+- During early development, Strand is very opinionated, and minimal customisation will be available. This may change in the future.
+
 ## Download
 
 > [!WARNING]
