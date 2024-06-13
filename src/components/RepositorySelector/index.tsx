@@ -7,8 +7,8 @@ import { commands } from '../../bindings'
 import { cn } from '../../utils/cn'
 import { useCommandMutation } from '../../utils/useCommandMutation'
 import { useCommandQuery } from '../../utils/useCommandQuery'
-import { DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '../DropdownMenu'
-import { TooltipContent } from '../Tooltip'
+import { DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '../UI/DropdownMenu'
+import { TooltipContent } from '../UI/Tooltip'
 
 export const RepositorySelector = () => {
   const queryClient = useQueryClient()

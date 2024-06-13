@@ -12,8 +12,8 @@ import {
 import { commands } from '../../bindings'
 import { cn } from '../../utils/cn'
 import { useCommandMutation } from '../../utils/useCommandMutation'
-import { IconButton } from '../IconButton'
 import { RepositorySelector } from '../RepositorySelector'
+import { IconButton } from '../UI/IconButton'
 
 export const Toolbar = () => {
   const queryClient = useQueryClient()

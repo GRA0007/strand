@@ -1,6 +1,6 @@
 import { Tooltip, TooltipTrigger } from '@radix-ui/react-tooltip'
 import { BellIcon } from 'lucide-react'
-import { TooltipContent } from '../Tooltip'
+import { TooltipContent } from '../UI/Tooltip'
 
 export const Notifications = () => {
   return (

@@ -1,6 +1,6 @@
 import { Tooltip, TooltipTrigger } from '@radix-ui/react-tooltip'
 import { HistoryIcon } from 'lucide-react'
-import { TooltipContent } from '../Tooltip'
+import { TooltipContent } from '../UI/Tooltip'
 
 export const History = () => {
   return (

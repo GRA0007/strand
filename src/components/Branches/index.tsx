@@ -12,8 +12,8 @@ import { PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 import { type UpstreamTrack, commands } from '../../bindings'
 import { useCommandQuery } from '../../utils/useCommandQuery'
 import { BranchListPanel } from '../BranchListPanel'
-import { IconButton } from '../IconButton'
-import { TooltipContent } from '../Tooltip'
+import { IconButton } from '../UI/IconButton'
+import { TooltipContent } from '../UI/Tooltip'
 
 export const Branches = () => {
   const { data: state } = useCommandQuery({
