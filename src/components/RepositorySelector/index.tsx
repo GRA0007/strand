@@ -92,7 +92,7 @@ export const RepositorySelector = () => {
             addRepository.mutate(folder)
           }}
         >
-          <span className="text-foreground/80">Open from file</span>
+          <span className="text-foreground/80">Open</span>
           <FolderIcon className="h-3 w-3 opacity-60" />
         </DropdownMenuItem>
       </DropdownMenuContent>

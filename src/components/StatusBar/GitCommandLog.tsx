@@ -39,16 +39,16 @@ export const GitCommandLog = () => {
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="px-2 bg-surface rounded-md flex-1 flex items-center gap-2 hover:enabled:bg-foreground/10 active:enabled:bg-foreground/20 min-w-0"
+          className="bg-surface rounded-md flex-1 flex items-center hover:enabled:bg-foreground/10 active:enabled:bg-foreground/20 min-w-0"
           disabled={!latestCommand}
         >
           <Tooltip>
             <TooltipTrigger asChild>
-              <ListTreeIcon className="h-4 w-4 shrink-0" />
+              <ListTreeIcon className="h-8 w-8 p-2 shrink-0" />
             </TooltipTrigger>
             <TooltipContent>Git command log</TooltipContent>
           </Tooltip>
-          <span className="font-mono text-xs text-foreground/70 whitespace-nowrap overflow-hidden text-ellipsis mx-1">
+          <span className="font-mono text-xs text-foreground/70 whitespace-nowrap overflow-hidden text-ellipsis ml-1 mr-3">
             {latestCommand?.command ?? 'No commands run'}
           </span>
         </button>
