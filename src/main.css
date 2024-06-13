@@ -13,6 +13,11 @@
   --color-background: #181818;
   --color-foreground: #EEEEEE;
   --color-surface: #282828;
+
+  --color-info: #5CAFFC;
+  --color-success: #5CC154;
+  --color-warn: #DA8E47;
+  --color-error: #F25D5D;
 }
 
 @media (prefers-color-scheme: light) {

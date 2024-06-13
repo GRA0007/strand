@@ -5,6 +5,7 @@ import { type ImperativePanelHandle, Panel, PanelGroup, PanelResizeHandle } from
 import { Branches } from './components/Branches'
 import { StatusBar } from './components/StatusBar'
 import { Toolbar } from './components/Toolbar'
+import { Toast } from './components/UI/Toast'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,6 +38,18 @@ export const App = () => {
 
               <Panel className="bg-surface rounded-md" minSize={30}>
                 tree (todo)
+                <Toast
+                  variant="info"
+                  title="Version 0.1.1 is ready to install"
+                  action={{ label: 'Update', onClick: console.log }}
+                />
+                <Toast variant="error" title="Failed to open repository">
+                  <code>cool-folder</code> is not a git repository
+                </Toast>
+                <Toast variant="warning" title="Large repository detected">
+                  You may want to consider a sparse checkout
+                </Toast>
+                <Toast variant="success" title="Branch created" />
               </Panel>
 
               <PanelResizeHandle className="w-4" onDoubleClick={() => rightPanelRef.current?.resize(30)} />
