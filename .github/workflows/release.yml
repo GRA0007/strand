@@ -30,9 +30,11 @@ jobs:
           command: version-or-publish
           createRelease: true
           draftRelease: true
+      - id: package-version
+        uses: martinbeentjes/npm-get-version-action@v1.3.1
       - name: set Cargo.toml version
         run: |
-          sed -i 's/^version = .*/version = "${{ steps.covector.outputs.version-strand }}"/' Cargo.toml
+          sed -i 's/^version = .*/version = "${{ steps.package-version.outputs.current-version }}"/' Cargo.toml
           cargo update -w
         working-directory: src-tauri
         if: steps.covector.outputs.commandRan == 'version'
