@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { ListTreeIcon, PencilIcon, SearchIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { events, type GitCommandLog as GitCommandLogType, commands } from '../../bindings'
+import { formatDate } from '../../utils/formatDate'
 import { useCommandQuery } from '../../utils/useCommandQuery'
 import { PopoverContent } from '../UI/Popover'
 import { TooltipContent } from '../UI/Tooltip'
@@ -66,7 +67,9 @@ export const GitCommandLog = () => {
 const LogItem = ({ item }: { item: GitCommandLogType }) => {
   return (
     <div className="flex gap-2 text-sm items-center font-mono whitespace-nowrap">
-      <span className="text-foreground/60">{item.created_at}</span>
+      <span className="text-foreground/60" title={formatDate(item.created_at)}>
+        {formatDate(item.created_at, 'yyyy-MM-dd HH:mm:ss')}
+      </span>
       {item.command_type === 'Query' && <SearchIcon className="h-3 w-3" />}
       {item.command_type === 'Mutation' && <PencilIcon className="h-3 w-3" />}
       <span>{item.command}</span>

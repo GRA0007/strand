@@ -34,7 +34,7 @@ export const Branches = () => {
         icon={<CircleIcon className="h-4 w-4" />}
         title="Local"
         actions={
-          <IconButton tooltip="Clean merged branches" size="sm">
+          <IconButton tooltip="Clean merged branches" size="sm" disabled>
             <PaintbrushIcon />
           </IconButton>
         }
@@ -58,7 +58,7 @@ export const Branches = () => {
         icon={<CircleDashedIcon className="h-4 w-4" />}
         title="Remote"
         actions={
-          <IconButton tooltip="Add remote" size="sm">
+          <IconButton tooltip="Add remote" size="sm" disabled>
             <PlusIcon />
           </IconButton>
         }

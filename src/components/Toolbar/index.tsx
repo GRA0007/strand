@@ -35,16 +35,16 @@ export const Toolbar = () => {
       <IconButton tooltip="Pull (fast-forward if possible)">
         <ArrowDownToLineIcon />
       </IconButton>
-      <IconButton tooltip="Push">
+      <IconButton tooltip="Push" disabled>
         <ArrowUpFromLineIcon />
       </IconButton>
-      <IconButton tooltip="Create branch">
+      <IconButton tooltip="Create branch" disabled>
         <GitBranchPlusIcon />
       </IconButton>
 
       <div className="w-px bg-foreground/20 mx-2 self-stretch" />
 
-      <IconButton tooltip="Undo">
+      <IconButton tooltip="Undo" disabled>
         <UndoIcon />
       </IconButton>
       <IconButton tooltip="Redo" disabled>
@@ -56,13 +56,14 @@ export const Toolbar = () => {
         <input
           className="bg-foreground/10 rounded-md h-8 px-2 pl-8 text-sm outline-none border-none w-[170px]"
           placeholder="Search..."
+          disabled
         />
       </div>
 
       <div className="flex-1" />
 
       <RepositorySelector />
-      <IconButton tooltip="Settings">
+      <IconButton tooltip="Settings" disabled>
         <SettingsIcon />
       </IconButton>
     </nav>
