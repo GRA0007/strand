@@ -3,20 +3,17 @@
 
 use std::{fs::create_dir_all, str::FromStr};
 
-use serde::{Deserialize, Serialize};
-use specta::{ts::ExportConfig, Type};
+use cli::GitCommandEvent;
+use specta::ts::ExportConfig;
 use sqlx::{sqlite::SqliteConnectOptions, SqlitePool};
 use state::StrandState;
 use tauri::{Manager, RunEvent};
-use tauri_specta::{collect_commands, collect_events, ts, Event};
+use tauri_specta::{collect_commands, collect_events, ts};
 
 pub mod cli;
 pub mod commands;
 pub mod state;
 pub mod structures;
-
-#[derive(Debug, Clone, Serialize, Deserialize, Type, Event)]
-struct GitCommandEvent(String);
 
 fn main() {
     let (invoke_handler, register_events) = {
@@ -27,6 +24,7 @@ fn main() {
                 commands::set_open_repository::set_open_repository,
                 commands::get_state_data::get_state_data,
                 commands::git_fetch::git_fetch,
+                commands::get_git_command_log::get_git_command_log,
             ))
             .events(collect_events!(GitCommandEvent))
             .config(ExportConfig::new().bigint(specta::ts::BigIntExportBehavior::Number));

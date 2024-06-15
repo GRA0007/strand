@@ -7,8 +7,8 @@ import { commands } from '../../bindings'
 import { cn } from '../../utils/cn'
 import { useCommandMutation } from '../../utils/useCommandMutation'
 import { useCommandQuery } from '../../utils/useCommandQuery'
-import { DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '../DropdownMenu'
-import { TooltipContent } from '../Tooltip'
+import { DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '../UI/DropdownMenu'
+import { TooltipContent } from '../UI/Tooltip'
 
 export const RepositorySelector = () => {
   const queryClient = useQueryClient()
@@ -72,11 +72,11 @@ export const RepositorySelector = () => {
 
         {(state?.repositories?.length ?? 0) > 0 && <DropdownMenuSeparator />}
 
-        <DropdownMenuItem className="gap-2 justify-end">
+        <DropdownMenuItem className="gap-2 justify-end" disabled>
           <span className="text-foreground/80">Create</span>
           <PlusIcon className="h-3 w-3 opacity-60" />
         </DropdownMenuItem>
-        <DropdownMenuItem className="gap-2 justify-end">
+        <DropdownMenuItem className="gap-2 justify-end" disabled>
           <span className="text-foreground/80">Clone</span>
           <CopyIcon className="h-3 w-3 opacity-60" />
         </DropdownMenuItem>
@@ -92,7 +92,7 @@ export const RepositorySelector = () => {
             addRepository.mutate(folder)
           }}
         >
-          <span className="text-foreground/80">Open from file</span>
+          <span className="text-foreground/80">Open</span>
           <FolderIcon className="h-3 w-3 opacity-60" />
         </DropdownMenuItem>
       </DropdownMenuContent>

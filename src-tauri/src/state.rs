@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use chrono::NaiveDateTime;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use specta::Type;
 use sqlx::{Pool, Sqlite};
 use tokio::sync::Mutex;
@@ -15,6 +15,31 @@ pub struct Repository {
     pub last_opened_at: Option<NaiveDateTime>,
     pub last_fetched_at: Option<NaiveDateTime>,
     pub has_changes: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Type)]
+#[repr(i64)]
+pub enum GitCommandType {
+    Query,
+    Mutation,
+}
+
+impl From<i64> for GitCommandType {
+    fn from(value: i64) -> Self {
+        match value {
+            0 => Self::Query,
+            1 => Self::Mutation,
+            _ => panic!("Not a valid git command log type"),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Type, Debug)]
+pub struct GitCommandLog {
+    pub id: i64,
+    pub command: String,
+    pub command_type: GitCommandType,
+    pub created_at: NaiveDateTime,
 }
 
 #[derive(Serialize, Clone, Default, Type)]
@@ -69,10 +94,9 @@ impl StrandState {
         .await?
         .last_insert_rowid();
 
-        let repository: Repository =
-            sqlx::query_as!(Repository, "SELECT * FROM repository WHERE id = ?", id)
-                .fetch_one(&self.pool)
-                .await?;
+        let repository = sqlx::query_as!(Repository, "SELECT * FROM repository WHERE id = ?", id)
+            .fetch_one(&self.pool)
+            .await?;
 
         data.repositories.push(repository.clone());
 
@@ -114,5 +138,57 @@ impl StrandState {
         };
 
         Ok(())
+    }
+
+    /// Adds a git command log to the currently open repository
+    pub async fn add_git_command_log(
+        &self,
+        command: String,
+        command_type: GitCommandType,
+    ) -> Result<GitCommandLog, sqlx::Error> {
+        let data = self.data.lock().await;
+
+        match &data.open_repository {
+            Some(open_repository) => {
+                let command_type = command_type as i64;
+                let id = sqlx::query!(
+                    "INSERT INTO git_command_log (command, command_type, repository_id) VALUES (?, ?, ?)",
+                    command,
+                    command_type,
+                    open_repository.id
+                )
+                .execute(&self.pool)
+                .await?
+                .last_insert_rowid();
+
+                sqlx::query_as!(
+                    GitCommandLog,
+                    "SELECT id, command, command_type, created_at FROM git_command_log WHERE id = ?",
+                    id
+                )
+                .fetch_one(&self.pool)
+                .await
+            }
+            None => panic!("TODO: handle no open repo"),
+        }
+    }
+
+    /// Get the full git command log history for the open repository
+    pub async fn get_git_command_log(&self) -> Result<Vec<GitCommandLog>, sqlx::Error> {
+        let data = self.data.lock().await;
+
+        match &data.open_repository.as_ref().map(|r| r.id) {
+            Some(open_repository_id) => {
+                sqlx::query_as!(
+                    GitCommandLog,
+                    // TODO: sort by date, and paginate
+                    "SELECT id, command, command_type, created_at FROM git_command_log WHERE repository_id = ?",
+                    open_repository_id
+                )
+                .fetch_all(&self.pool)
+                .await
+            }
+            None => panic!("TODO: handle no open repo"),
+        }
     }
 }

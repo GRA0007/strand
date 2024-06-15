@@ -12,8 +12,8 @@ import { PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 import { type UpstreamTrack, commands } from '../../bindings'
 import { useCommandQuery } from '../../utils/useCommandQuery'
 import { BranchListPanel } from '../BranchListPanel'
-import { IconButton } from '../IconButton'
-import { TooltipContent } from '../Tooltip'
+import { IconButton } from '../UI/IconButton'
+import { TooltipContent } from '../UI/Tooltip'
 
 export const Branches = () => {
   const { data: state } = useCommandQuery({
@@ -34,7 +34,7 @@ export const Branches = () => {
         icon={<CircleIcon className="h-4 w-4" />}
         title="Local"
         actions={
-          <IconButton tooltip="Clean merged branches" size="sm">
+          <IconButton tooltip="Clean merged branches" size="sm" disabled>
             <PaintbrushIcon />
           </IconButton>
         }
@@ -58,7 +58,7 @@ export const Branches = () => {
         icon={<CircleDashedIcon className="h-4 w-4" />}
         title="Remote"
         actions={
-          <IconButton tooltip="Add remote" size="sm">
+          <IconButton tooltip="Add remote" size="sm" disabled>
             <PlusIcon />
           </IconButton>
         }

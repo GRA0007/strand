@@ -20,7 +20,7 @@ export const BranchListPanel = ({ title, icon, actions, className, items, ...pro
   const tree = useMemo(() => itemsToTree(items), [items])
 
   return (
-    <Panel className={cn('bg-surface rounded-lg flex flex-col', className)} {...props}>
+    <Panel className={cn('bg-surface rounded-md flex flex-col', className)} {...props}>
       <header className="border-foreground/20 border-b flex items-center h-8 pl-2 pr-1 gap-1 text-foreground/70">
         {icon}
         <h2 className="text-sm font-semibold mr-auto ml-0.5">{title}</h2>

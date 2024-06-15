@@ -43,6 +43,14 @@ try {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+async getGitCommandLog() : Promise<Result<GitCommandLog[], CommandError>> {
+try {
+    return { status: "ok", data: await TAURI_INVOKE("get_git_command_log") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -62,8 +70,10 @@ gitCommandEvent: "git-command-event"
 
 export type Branches = { local: LocalBranch[]; remote: RemoteBranch[] }
 export type CommandError = { Git: GitError } | "Sqlx" | "Parse" | { Other: string }
-export type GitCommandEvent = string
-export type GitError = "Io" | { Unsuccessful: string } | "NoRepoOpen" | "NotARepository"
+export type GitCommandEvent = GitCommandLog
+export type GitCommandLog = { id: number; command: string; command_type: GitCommandType; created_at: string }
+export type GitCommandType = "Query" | "Mutation"
+export type GitError = "Io" | "Sqlx" | { Unsuccessful: string } | "NoRepoOpen" | "NotARepository"
 export type GitHash = string
 export type LocalBranch = { head: boolean; 
 /**

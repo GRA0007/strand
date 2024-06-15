@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO git_command_log (command, command_type, repository_id) VALUES (?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "1c03c598246a1874860bd2c32b4a95c242d3bd30f70d5eabb916a2b7514c79a5"
+}

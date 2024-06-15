@@ -3,6 +3,7 @@ use specta::Type;
 
 use crate::{
     cli::GitCommand,
+    state::GitCommandType,
     structures::git::branch::{LocalBranch, RemoteBranch},
 };
 
@@ -22,7 +23,7 @@ async fn local_branches(app_handle: &tauri::AppHandle) -> CommandResult<Vec<Loca
     let branches = GitCommand::new("for-each-ref")
         .arg(format!("--format={format}"))
         .arg("refs/heads")
-        .run(app_handle)
+        .run(app_handle, GitCommandType::Query)
         .await?;
     branches
         .lines()
@@ -35,7 +36,7 @@ async fn remote_branches(app_handle: &tauri::AppHandle) -> CommandResult<Vec<Rem
     let branches = GitCommand::new("for-each-ref")
         .arg(format!("--format={format}"))
         .arg("refs/remotes")
-        .run(app_handle)
+        .run(app_handle, GitCommandType::Query)
         .await?;
     let branches: CommandResult<Vec<RemoteBranch>> = branches
         .lines()
