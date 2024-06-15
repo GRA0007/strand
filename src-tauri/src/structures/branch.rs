@@ -41,12 +41,7 @@ impl FromStr for LocalBranch {
                 .map(|s| s.to_owned())
                 .collect(),
             upstream_track: parts.next().ok_or(())?.parse().map_err(|_err| ())?,
-            hash: parts
-                .next()
-                .ok_or(())?
-                .to_string()
-                .try_into()
-                .map_err(|_err| ())?,
+            hash: parts.next().ok_or(())?.parse().map_err(|_err| ())?,
         })
     }
 }
@@ -62,12 +57,7 @@ impl FromStr for RemoteBranch {
                 .split('/')
                 .map(|s| s.to_owned())
                 .collect(),
-            hash: parts
-                .next()
-                .ok_or(())?
-                .to_string()
-                .try_into()
-                .map_err(|_err| ())?,
+            hash: parts.next().ok_or(())?.parse().map_err(|_err| ())?,
         })
     }
 }

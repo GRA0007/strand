@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useRef } from 'react'
 import { type ImperativePanelHandle, Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 import { Branches } from './components/Branches'
+import { Graph } from './components/Graph'
 import { StatusBar } from './components/StatusBar'
 import { Toaster } from './components/Toaster/Toaster'
 import { Toolbar } from './components/Toolbar'
@@ -37,7 +38,7 @@ export const App = () => {
               />
 
               <Panel className="bg-surface rounded-md" minSize={30}>
-                tree (todo)
+                <Graph />
               </Panel>
 
               <PanelResizeHandle className="w-4" onDoubleClick={() => rightPanelRef.current?.resize(30)} />

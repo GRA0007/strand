@@ -59,12 +59,12 @@ impl GitCommand {
         self
     }
 
-    pub fn create_format_arg(fields: &[&str]) -> String {
+    pub fn create_format_arg(fields: &[&str], separator: &str) -> String {
         fields
             .iter()
-            .map(|field| format!("%({field})"))
+            .map(|field| format!("%{field}"))
             .collect::<Vec<String>>()
-            .join("%00")
+            .join(separator)
     }
 
     pub async fn run(

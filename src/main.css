@@ -53,3 +53,7 @@
   -webkit-text-size-adjust: 100%;
   overscroll-behavior: none;
 }
+
+*:not(input) {
+  @apply select-none cursor-default;
+}

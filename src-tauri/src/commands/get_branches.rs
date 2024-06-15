@@ -4,22 +4,22 @@ use specta::Type;
 use crate::{
     cli::GitCommand,
     state::GitCommandType,
-    structures::git::branch::{LocalBranch, RemoteBranch},
+    structures::branch::{LocalBranch, RemoteBranch},
 };
 
 use super::{CommandError, CommandResult};
 
 const LOCAL_BRANCH_FIELDS: &[&str] = &[
-    "HEAD",
-    "refname:short",
-    "upstream:short",
-    "upstream:track,nobracket",
-    "objectname",
+    "(HEAD)",
+    "(refname:short)",
+    "(upstream:short)",
+    "(upstream:track,nobracket)",
+    "(objectname)",
 ];
-const REMOTE_BRANCH_FIELDS: &[&str] = &["refname:short", "objectname"];
+const REMOTE_BRANCH_FIELDS: &[&str] = &["(refname:short)", "(objectname)"];
 
 async fn local_branches(app_handle: &tauri::AppHandle) -> CommandResult<Vec<LocalBranch>> {
-    let format = GitCommand::create_format_arg(LOCAL_BRANCH_FIELDS);
+    let format = GitCommand::create_format_arg(LOCAL_BRANCH_FIELDS, "%00");
     let branches = GitCommand::new("for-each-ref")
         .arg(format!("--format={format}"))
         .arg("refs/heads")
@@ -32,7 +32,7 @@ async fn local_branches(app_handle: &tauri::AppHandle) -> CommandResult<Vec<Loca
 }
 
 async fn remote_branches(app_handle: &tauri::AppHandle) -> CommandResult<Vec<RemoteBranch>> {
-    let format = GitCommand::create_format_arg(REMOTE_BRANCH_FIELDS);
+    let format = GitCommand::create_format_arg(REMOTE_BRANCH_FIELDS, "%00");
     let branches = GitCommand::new("for-each-ref")
         .arg(format!("--format={format}"))
         .arg("refs/remotes")
