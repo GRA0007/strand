@@ -25,6 +25,7 @@ fn main() {
                 commands::get_state_data::get_state_data,
                 commands::git_fetch::git_fetch,
                 commands::get_git_command_log::get_git_command_log,
+                commands::get_graph::get_graph,
             ))
             .events(collect_events!(GitCommandEvent))
             .config(ExportConfig::new().bigint(specta::ts::BigIntExportBehavior::Number));

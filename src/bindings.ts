@@ -51,6 +51,14 @@ try {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+async getGraph() : Promise<Result<Commit[], CommandError>> {
+try {
+    return { status: "ok", data: await TAURI_INVOKE("get_graph") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -70,6 +78,8 @@ gitCommandEvent: "git-command-event"
 
 export type Branches = { local: LocalBranch[]; remote: RemoteBranch[] }
 export type CommandError = { Git: GitError } | "Sqlx" | "Parse" | { Other: string }
+export type Commit = { hash: GitHash; parent_hashes: GitHash[]; author: CommitUser; committer: CommitUser; message: string; description: string | null }
+export type CommitUser = { name: string; email: string; date: string; email_hash: string }
 export type GitCommandEvent = GitCommandLog
 export type GitCommandLog = { id: number; command: string; command_type: GitCommandType; created_at: string }
 export type GitCommandType = "Query" | "Mutation"
