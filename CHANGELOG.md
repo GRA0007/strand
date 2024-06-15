@@ -1,5 +1,13 @@
 # Changelog
 
+## \[0.2.0]
+
+### New Features
+
+- [`bfbf0b3`](https://www.github.com/GRA0007/strand/commit/bfbf0b3a4dcb4236bb9cb00944dfb3db41add308) Disable unimplemented buttons in the UI
+- [`bfbf0b3`](https://www.github.com/GRA0007/strand/commit/bfbf0b3a4dcb4236bb9cb00944dfb3db41add308) Store the full git command log history and make it viewable in the UI
+- [`bfbf0b3`](https://www.github.com/GRA0007/strand/commit/bfbf0b3a4dcb4236bb9cb00944dfb3db41add308) Implement a basic toast system to show alerts and information
+
 ## \[0.1.0]
 
 ### New Features
