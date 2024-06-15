@@ -1,7 +1,6 @@
 import { Panel, PanelResizeHandle } from 'react-resizable-panels'
 import { GitCommandLog } from './GitCommandLog'
 import { History } from './History'
-import { Notifications } from './Notifications'
 
 export const StatusBar = () => {
   return (
@@ -11,7 +10,6 @@ export const StatusBar = () => {
       <Panel defaultSize={10} collapsible minSize={10} maxSize={10} className="flex gap-4 max-h-8">
         <GitCommandLog />
         <History />
-        <Notifications />
       </Panel>
     </>
   )

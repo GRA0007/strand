@@ -25,6 +25,11 @@
     --color-background: #FFFFFF;
     --color-foreground: #000000;
     --color-surface: #EEEEEE;
+
+    --color-info: #1386f0;
+    --color-success: #119a07;
+    --color-warn: #c96609;
+    --color-error: #b50b0b;
   }
 }
 
