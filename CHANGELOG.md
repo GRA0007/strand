@@ -1,5 +1,11 @@
 # Changelog
 
+## \[0.3.0]
+
+### New Features
+
+- [`d2bb9de`](https://www.github.com/GRA0007/strand/commit/d2bb9dea5c38d3c761e34ec28fbfbd7e93aef958) Load commits with `git log` and display them in the graph panel
+
 ## \[0.2.0]
 
 ### New Features
