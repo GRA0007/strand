@@ -30,8 +30,11 @@ jobs:
           command: version-or-publish
           createRelease: true
           draftRelease: true
+
+      # If versioning (creating a version PR)
       - id: package-version
         uses: martinbeentjes/npm-get-version-action@v1.3.1
+        if: steps.covector.outputs.commandRan == 'version'
       - name: set Cargo.toml version
         run: |
           sed -i 's/^version = .*/version = "${{ steps.package-version.outputs.current-version }}"/' Cargo.toml
