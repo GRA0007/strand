@@ -32,7 +32,7 @@ export const Toolbar = () => {
       >
         <RefreshCwIcon className={cn(fetchAll.isPending && 'animate-spin')} />
       </IconButton>
-      <IconButton tooltip="Pull (fast-forward if possible)">
+      <IconButton tooltip="Pull (fast-forward if possible)" disabled>
         <ArrowDownToLineIcon />
       </IconButton>
       <IconButton tooltip="Push" disabled>

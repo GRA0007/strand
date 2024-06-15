@@ -7,6 +7,7 @@ export const History = () => {
     <button
       type="button"
       className="bg-surface rounded-md flex items-center hover:enabled:bg-foreground/10 active:enabled:bg-foreground/20 min-w-0"
+      disabled
     >
       <Tooltip>
         <TooltipTrigger asChild>

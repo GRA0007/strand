@@ -1,17 +1,20 @@
 import { Popover, PopoverTrigger } from '@radix-ui/react-popover'
+import { Select, SelectValue } from '@radix-ui/react-select'
 import { Tooltip, TooltipTrigger } from '@radix-ui/react-tooltip'
 import { useQueryClient } from '@tanstack/react-query'
-import { ListTreeIcon, PencilIcon, SearchIcon } from 'lucide-react'
+import { FilterIcon, ListTreeIcon, PencilIcon, SearchIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { events, type GitCommandLog as GitCommandLogType, commands } from '../../bindings'
 import { formatDate } from '../../utils/formatDate'
 import { useCommandQuery } from '../../utils/useCommandQuery'
 import { PopoverContent } from '../UI/Popover'
+import { SelectContent, SelectItem, SelectTrigger } from '../UI/Select'
 import { TooltipContent } from '../UI/Tooltip'
 
 export const GitCommandLog = () => {
   const queryClient = useQueryClient()
   const [isOpen, setIsOpen] = useState(false)
+  const [filter, setFilter] = useState<'all' | 'query' | 'mutation'>('mutation')
 
   const [latestCommand, setLatestCommand] = useState<GitCommandLogType>()
   useEffect(() => {
@@ -55,10 +58,29 @@ export const GitCommandLog = () => {
         </button>
       </PopoverTrigger>
 
-      <PopoverContent className="max-h-[min(400px,_var(--radix-popover-content-available-height))] w-[var(--radix-popover-content-available-width)] p-2 flex flex-col gap-1">
-        {log?.map((item) => (
-          <LogItem key={item.id} item={item} />
-        ))}
+      <PopoverContent className="max-h-[min(400px,_var(--radix-popover-content-available-height))] w-[var(--radix-popover-content-available-width)] p-0 flex flex-col">
+        <div className="border-b border-foreground/10 pl-2 pr-1 py-1 flex items-center gap-2">
+          <span className="text-sm font-semibold text-foreground/70 mr-auto">Git command log</span>
+          <FilterIcon className="h-4 w-4" />
+          <Select value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent align="end">
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="query">Queries</SelectItem>
+              <SelectItem value="mutation">Mutations</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="overflow-auto flex-1 p-2">
+          {log?.flatMap((item) => {
+            if (filter === 'mutation' && item.command_type === 'Query') return []
+            if (filter === 'query' && item.command_type === 'Mutation') return []
+            return [<LogItem key={item.id} item={item} />]
+          })}
+        </div>
       </PopoverContent>
     </Popover>
   )
