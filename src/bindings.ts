@@ -52,9 +52,9 @@ try {
     else return { status: "error", error: e  as any };
 }
 },
-async getGitCommandLog() : Promise<Result<GitCommandLog[], CommandError>> {
+async getGitCommandLog(filter: GitCommandType | null) : Promise<Result<GitCommandLog[], CommandError>> {
 try {
-    return { status: "ok", data: await TAURI_INVOKE("get_git_command_log") };
+    return { status: "ok", data: await TAURI_INVOKE("get_git_command_log", { filter }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };

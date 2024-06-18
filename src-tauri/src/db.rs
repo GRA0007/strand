@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use specta::Type;
-use sqlx::{Pool, Sqlite};
+use sqlx::{prelude::FromRow, sqlite::SqliteRow, Pool, QueryBuilder, Row, Sqlite};
 use tokio::sync::Mutex;
 
 #[derive(Serialize, Clone, Type, Debug)]
@@ -40,6 +40,17 @@ pub struct GitCommandLog {
     pub command: String,
     pub command_type: GitCommandType,
     pub created_at: NaiveDateTime,
+}
+
+impl<'r> FromRow<'r, SqliteRow> for GitCommandLog {
+    fn from_row(row: &'r SqliteRow) -> Result<Self, sqlx::Error> {
+        Ok(Self {
+            id: row.try_get("id")?,
+            command: row.try_get("command")?,
+            command_type: row.try_get::<i64, _>("command_type")?.into(),
+            created_at: row.try_get("created_at")?,
+        })
+    }
 }
 
 #[derive(Serialize, Clone, Default, Type)]
@@ -173,19 +184,22 @@ impl Db {
     }
 
     /// Get the full git command log history for the open repository
-    pub async fn get_git_command_log(&self) -> Result<Vec<GitCommandLog>, sqlx::Error> {
+    pub async fn get_git_command_log(
+        &self,
+        filter: Option<GitCommandType>,
+    ) -> Result<Vec<GitCommandLog>, sqlx::Error> {
         let state = self.state.lock().await;
 
         match &state.open_repository.as_ref().map(|r| r.id) {
             Some(open_repository_id) => {
-                sqlx::query_as!(
-                    GitCommandLog,
-                    // TODO: sort by date, and paginate
-                    "SELECT id, command, command_type, created_at FROM git_command_log WHERE repository_id = ?",
-                    open_repository_id
-                )
-                .fetch_all(&self.pool)
-                .await
+                // TODO: sort by date, and paginate
+                let mut query = QueryBuilder::new("SELECT id, command, command_type, created_at FROM git_command_log WHERE repository_id = ");
+                query.push_bind(open_repository_id);
+                if let Some(command_type) = filter {
+                    query.push(" AND command_type = ");
+                    query.push_bind(command_type as i64);
+                }
+                query.build_query_as().fetch_all(&self.pool).await
             }
             None => panic!("TODO: handle no open repo"),
         }

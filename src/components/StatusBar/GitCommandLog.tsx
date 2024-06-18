@@ -26,11 +26,16 @@ export const GitCommandLog = () => {
     }
   }, [filter])
 
-  const { data: log } = useCommandQuery({
+  const { data: log, refetch } = useCommandQuery({
     queryKey: ['gitCommandLog'],
-    queryFn: commands.getGitCommandLog,
+    queryFn: () => commands.getGitCommandLog(filter === 'all' ? null : filter),
     enabled: isOpen,
   })
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: Refetch when filter changes
+  useEffect(() => {
+    refetch()
+  }, [filter])
 
   return (
     <Popover
