@@ -21,20 +21,14 @@ export const Graph = () => {
         {commits?.map((commit) => (
           <div key={commit.hash} className="h-7 flex items-center pl-2">
             <div className="flex items-center h-6 hover:bg-info/10 rounded-l-full flex-1">
-              <AvatarStack>
-                <Avatar
-                  emailHash={commit.author.email_hash}
-                  name={commit.author.name}
-                  email={commit.author.email}
-                  className="h-6 w-6 border-2 border-info"
-                />
+              <AvatarStack className="h-6 w-6 border-2 border-info">
+                <Avatar emailHash={commit.author.email_hash} name={commit.author.name} email={commit.author.email} />
 
                 {commit.author.email !== commit.committer.email && (
                   <Avatar
                     emailHash={commit.committer.email_hash}
                     name={commit.committer.name}
                     email={commit.committer.email}
-                    className="h-6 w-6 border-2 border-info"
                   />
                 )}
               </AvatarStack>
