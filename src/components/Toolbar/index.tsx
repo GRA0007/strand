@@ -20,7 +20,11 @@ export const Toolbar = () => {
 
   const fetchAll = useCommandMutation({
     mutationFn: commands.gitFetch,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['branches'] }),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['branches'] }),
+        queryClient.invalidateQueries({ queryKey: ['graph'] }),
+      ]),
   })
 
   return (
