@@ -13,49 +13,43 @@ import { TooltipContent } from '../UI/Tooltip'
 export const RepositorySelector = () => {
   const queryClient = useQueryClient()
 
-  const { data: state } = useCommandQuery({
-    queryKey: ['state'],
-    queryFn: commands.getStateData,
+  const { data: openRepository } = useCommandQuery({
+    queryKey: ['openRepository'],
+    queryFn: commands.getOpenRepository,
+  })
+
+  const { data: repositories } = useCommandQuery({
+    queryKey: ['repositories'],
+    queryFn: commands.getRepositories,
   })
 
   const addRepository = useCommandMutation({
     mutationFn: commands.addRepositoryFromPath,
-    onSuccess: () =>
-      Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['state'] }),
-        queryClient.invalidateQueries({ queryKey: ['branches'] }),
-      ]),
-    onError: () => {
-      console.error('Failed')
-    },
+    onSuccess: () => queryClient.invalidateQueries(),
   })
 
   const setOpenRepository = useCommandMutation({
     mutationFn: commands.setOpenRepository,
-    onSuccess: () =>
-      Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['state'] }),
-        queryClient.invalidateQueries({ queryKey: ['branches'] }),
-      ]),
+    onSuccess: () => queryClient.invalidateQueries(),
   })
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="font-semibold flex gap-2 items-center rounded outline-none hover:bg-foreground/10 data-[state='open']:bg-foreground/10 h-8 px-2 select-none">
-        {state?.open_repository?.name ?? 'Open a repository'}{' '}
+        {openRepository?.name ?? 'Open a repository'}{' '}
         <ChevronDownIcon className="h-3 w-3 [[data-state='open']_&]:rotate-180" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {state?.repositories?.map((repo) => (
+        {repositories?.map((repo) => (
           <DropdownMenuItem
             key={repo.name}
-            className={cn('justify-end pl-3 text-base gap-2', state.open_repository?.id === repo.id && 'font-semibold')}
+            className={cn('justify-end pl-3 text-base gap-2', openRepository?.id === repo.id && 'font-semibold')}
             onClick={() => {
               setOpenRepository.mutate(repo.id)
             }}
           >
             {repo.name}{' '}
-            {state?.open_repository?.id === repo.id ? (
+            {openRepository?.id === repo.id ? (
               <CheckIcon className="h-3 w-3" />
             ) : repo.has_changes ? (
               <Tooltip>
@@ -70,7 +64,7 @@ export const RepositorySelector = () => {
           </DropdownMenuItem>
         ))}
 
-        {(state?.repositories?.length ?? 0) > 0 && <DropdownMenuSeparator />}
+        {(repositories?.length ?? 0) > 0 && <DropdownMenuSeparator />}
 
         <DropdownMenuItem className="gap-2 justify-end" disabled>
           <span className="text-foreground/80">Create</span>

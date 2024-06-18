@@ -1,4 +1,4 @@
-use crate::{cli::GitCommand, state::GitCommandType};
+use crate::{cli::GitCommand, db::GitCommandType};
 
 use super::CommandResult;
 

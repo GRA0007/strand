@@ -3,9 +3,16 @@ import { useCommandQuery } from '../../utils/useCommandQuery'
 import { Avatar, AvatarStack } from '../UI/Avatar'
 
 export const Graph = () => {
+  const { data: openRepository } = useCommandQuery({
+    queryKey: ['openRepository'],
+    queryFn: commands.getOpenRepository,
+  })
+
   const { data: commits } = useCommandQuery({
     queryKey: ['graph'],
     queryFn: commands.getGraph,
+    enabled: Boolean(openRepository),
+    refetchOnWindowFocus: true,
   })
 
   return (

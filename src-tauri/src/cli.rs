@@ -7,7 +7,7 @@ use tauri_specta::Event;
 use thiserror::Error;
 use tokio::process::Command;
 
-use crate::state::{GitCommandLog, GitCommandType, StrandState};
+use crate::db::{Db, GitCommandLog, GitCommandType};
 
 #[derive(Error, Debug, Type)]
 pub enum GitError {
@@ -72,9 +72,9 @@ impl GitCommand {
         app_handle: &tauri::AppHandle,
         command_type: GitCommandType,
     ) -> Result<String, GitError> {
-        let state = app_handle.state::<StrandState>();
-        let local_path = state
-            .data
+        let db = app_handle.state::<Db>();
+        let local_path = db
+            .state
             .lock()
             .await
             .open_repository
@@ -97,12 +97,11 @@ impl GitCommand {
 
         // Log command and emit event
         GitCommandEvent(
-            state
-                .add_git_command_log(
-                    format!("{} {}", &self.command, self.args.join(" ")),
-                    command_type,
-                )
-                .await?,
+            db.add_git_command_log(
+                format!("{} {}", &self.command, self.args.join(" ")),
+                command_type,
+            )
+            .await?,
         )
         .emit(app_handle)
         .expect("Failed to emit event");

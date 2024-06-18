@@ -28,9 +28,17 @@ try {
     else return { status: "error", error: e  as any };
 }
 },
-async getStateData() : Promise<Result<StrandData, CommandError>> {
+async getOpenRepository() : Promise<Result<Repository | null, CommandError>> {
 try {
-    return { status: "ok", data: await TAURI_INVOKE("get_state_data") };
+    return { status: "ok", data: await TAURI_INVOKE("get_open_repository") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async getRepositories() : Promise<Result<Repository[], CommandError>> {
+try {
+    return { status: "ok", data: await TAURI_INVOKE("get_repositories") };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -96,7 +104,6 @@ export type RemoteBranch = {
  */
 name: string[]; hash: GitHash }
 export type Repository = { id: number; name: string; local_path: string; created_at: string; last_opened_at: string | null; last_fetched_at: string | null; has_changes: boolean }
-export type StrandData = { repositories: Repository[]; open_repository: Repository | null }
 /**
  * If both are 0, it's in sync. If None, the tracked upstream is missing.
  */

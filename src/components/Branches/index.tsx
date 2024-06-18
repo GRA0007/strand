@@ -16,14 +16,14 @@ import { IconButton } from '../UI/IconButton'
 import { TooltipContent } from '../UI/Tooltip'
 
 export const Branches = () => {
-  const { data: state } = useCommandQuery({
-    queryKey: ['state'],
-    queryFn: commands.getStateData,
+  const { data: openRepository } = useCommandQuery({
+    queryKey: ['openRepository'],
+    queryFn: commands.getOpenRepository,
   })
 
   const { data } = useCommandQuery({
     queryKey: ['branches'],
-    enabled: Boolean(state?.open_repository),
+    enabled: Boolean(openRepository),
     queryFn: commands.getBranches,
     refetchOnWindowFocus: true,
   })

@@ -1,4 +1,4 @@
-use crate::{cli::GitCommand, state::GitCommandType, structures::commit::Commit};
+use crate::{cli::GitCommand, db::GitCommandType, structures::commit::Commit};
 
 use super::{CommandError, CommandResult};
 
