@@ -1,4 +1,5 @@
 import { useAtom } from 'jotai'
+import { useEffect } from 'react'
 import { type Commit, commands } from '../../bindings'
 import { selectedCommitHashAtom } from '../../ui-state'
 import { cn } from '../../utils/cn'
@@ -20,6 +21,42 @@ export const Graph = () => {
 
   const [selectedHash, setSelectedHash] = useAtom(selectedCommitHashAtom)
 
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (
+      (e.target instanceof HTMLElement &&
+        (e.target.tagName === 'INPUT' ||
+          e.target.tagName === 'TEXTAREA' ||
+          e.target.tagName === 'BUTTON' ||
+          e.target.role === 'combobox' ||
+          e.target.role === 'menuitem' ||
+          e.target.role === 'option')) ||
+      !commits ||
+      !selectedHash
+    )
+      return
+
+    if (e.code === 'ArrowDown') {
+      e.preventDefault()
+      const currentIndex = commits.findIndex((c) => c.hash === selectedHash)
+      if (currentIndex === commits.length - 1) return
+      setSelectedHash(commits[currentIndex + 1].hash)
+      document.getElementById(commits[currentIndex + 1].hash)?.focus()
+    }
+    if (e.code === 'ArrowUp') {
+      e.preventDefault()
+      const currentIndex = commits.findIndex((c) => c.hash === selectedHash)
+      if (currentIndex === 0) return
+      setSelectedHash(commits[currentIndex - 1].hash)
+      document.getElementById(commits[currentIndex - 1].hash)?.focus()
+    }
+  }
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+    // biome-ignore lint/correctness/useExhaustiveDependencies: react compiler
+  }, [handleKeyDown])
+
   return (
     <div className="overflow-y-auto h-full">
       <div className="bg-[linear-gradient(color-mix(in_srgb,_var(--color-foreground)_5%,_transparent)_50%,transparent_50%)] [background-size:100%_3.5rem]">
@@ -29,18 +66,6 @@ export const Graph = () => {
             commit={commit}
             isSelected={selectedHash === commit.hash}
             onSelect={() => setSelectedHash(commit.hash)}
-            onKeyUp={() => {
-              const currentIndex = commits.findIndex((c) => c.hash === commit.hash)
-              if (currentIndex === 0 || !selectedHash) return
-              setSelectedHash(commits[currentIndex - 1].hash)
-              document.getElementById(commits[currentIndex - 1].hash)?.focus()
-            }}
-            onKeyDown={() => {
-              const currentIndex = commits.findIndex((c) => c.hash === commit.hash)
-              if (currentIndex === commits.length - 1 || !selectedHash) return
-              setSelectedHash(commits[currentIndex + 1].hash)
-              document.getElementById(commits[currentIndex + 1].hash)?.focus()
-            }}
           />
         ))}
       </div>
@@ -48,31 +73,14 @@ export const Graph = () => {
   )
 }
 
-const CommitRow = ({
-  commit,
-  isSelected,
-  onSelect,
-  onKeyUp,
-  onKeyDown,
-}: { commit: Commit; isSelected: boolean; onSelect: () => void; onKeyUp: () => void; onKeyDown: () => void }) => {
+const CommitRow = ({ commit, isSelected, onSelect }: { commit: Commit; isSelected: boolean; onSelect: () => void }) => {
   return (
     <div key={commit.hash} className="h-7 pl-2">
-      <button
-        type="button"
+      <div
         className="flex-1 flex items-center group/commit-row h-full w-full outline-none"
         onPointerDown={() => onSelect()}
-        onKeyDown={(e) => {
-          if (e.code === 'ArrowDown') {
-            e.preventDefault()
-            onKeyDown()
-          }
-          if (e.code === 'ArrowUp') {
-            e.preventDefault()
-            onKeyUp()
-          }
-        }}
-        tabIndex={0}
         id={commit.hash}
+        tabIndex={-1}
       >
         <div
           className={cn(
@@ -97,7 +105,7 @@ const CommitRow = ({
             {commit.description && <span className="text-foreground/50 ml-2">{commit.description}</span>}
           </div>
         </div>
-      </button>
+      </div>
     </div>
   )
 }
