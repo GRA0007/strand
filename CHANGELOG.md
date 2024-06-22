@@ -1,5 +1,17 @@
 # Changelog
 
+## \[0.4.0]
+
+### New Features
+
+- [`7bcdbac`](https://www.github.com/GRA0007/strand/commit/7bcdbaca2a34a8e8fc82e7f108248763cadf2e04) Display commit info and changed files when a commit is selected
+
+### Bug Fixes
+
+- [`28412fb`](https://www.github.com/GRA0007/strand/commit/28412fbb76e115231bef778a8c6c7f80e6ae9cb4) Fix commit parsing if description contained newlines
+- [`968bab9`](https://www.github.com/GRA0007/strand/commit/968bab9cfa776d86423a08a327f8c0030f4a4cf0) Only fetch requested git command log items from the database
+- [`97496b8`](https://www.github.com/GRA0007/strand/commit/97496b88ad48200c8a80f9bfe669f152187c9fd8) Refetch the graph when opening a new repository, fetching, or when tabbing back onto Strand
+
 ## \[0.3.0]
 
 ### New Features
