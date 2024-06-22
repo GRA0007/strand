@@ -1,4 +1,5 @@
 import { AvatarFallback, AvatarImage, Avatar as Root } from '@radix-ui/react-avatar'
+import { Slot, Slottable } from '@radix-ui/react-slot'
 import { Tooltip, TooltipTrigger } from '@radix-ui/react-tooltip'
 import { Children } from 'react'
 import { cn } from '../../utils/cn'
@@ -7,27 +8,47 @@ import { TooltipContent } from './Tooltip'
 export const Avatar = ({
   emailHash,
   name,
-  email,
   size = 40,
   className,
-}: { emailHash: string; name: string; email: string; size?: number; className?: string }) => {
+  ...props
+}: {
+  emailHash: string
+  name: string
+  /** The size of the image to load (should be at least 2x the pixel size) */
+  size?: number
+  className?: string
+} & (
+  | {
+      tooltip?: false
+    }
+  | {
+      tooltip: true
+      email: string
+    }
+)) => {
+  const avatar = (
+    <Root className={cn('relative flex shrink-0 overflow-hidden rounded-full h-6 w-6 text-[.6rem]', className)}>
+      <AvatarImage
+        src={`https://gravatar.com/avatar/${emailHash}?s=${size}&d=404`}
+        className="aspect-square h-full w-full object-cover"
+      />
+      <AvatarFallback className="flex h-full w-full items-center justify-center rounded-full bg-surface font-semibold">
+        {getInitials(name)}
+      </AvatarFallback>
+    </Root>
+  )
+
+  if (!props.tooltip) return avatar
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Root className={cn('relative flex shrink-0 overflow-hidden rounded-full h-5 w-5 text-[.6rem]', className)}>
-          <AvatarImage
-            src={`https://gravatar.com/avatar/${emailHash}?s=${size}&d=404`}
-            className="aspect-square h-full w-full object-cover"
-          />
-          <AvatarFallback className="flex h-full w-full items-center justify-center rounded-full bg-surface font-semibold">
-            {getInitials(name)}
-          </AvatarFallback>
-        </Root>
+        <Slottable>{avatar}</Slottable>
       </TooltipTrigger>
 
       <TooltipContent>
         {name}
-        <span className="text-foreground/60 text-[.6rem] block">{email}</span>
+        <span className="text-foreground/60 text-[.6rem] block">{props.email}</span>
       </TooltipContent>
     </Tooltip>
   )
@@ -43,17 +64,54 @@ const getInitials = (name: string) => {
     .toLocaleUpperCase()
 }
 
-export const AvatarStack = ({ children }: { children: React.ReactNode }) => {
+export const AvatarStack = ({ children, className }: { children: React.ReactNode; className?: string }) => {
+  const avatars = getStackAvatars(children)
   return (
-    <div className="flex gap-1 flex-row-reverse justify-end group w-6">
-      {Children.toArray(children)
-        .reverse()
-        .map((child, i) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: avatars won't change order
-          <div key={i} className={cn(i > 0 && 'w-1 group-hover:w-6 transition-[width]')}>
+    <div className={cn('h-6 w-6', className, 'relative border-none')}>
+      <div className="flex group absolute">
+        {avatars.map((child, i) => (
+          <Slot
+            // biome-ignore lint/suspicious/noArrayIndexKey: avatars won't change order
+            key={i}
+            className={cn(
+              className,
+              'relative',
+              i > 0 && 'group-hover:ml-1 transition-[margin]',
+              i === 0 && 'z-[3]',
+              i === 1 && 'z-[2] ml-[-1.1rem]',
+              i === 2 && 'z-[1] -ml-5',
+            )}
+          >
             {child}
-          </div>
+          </Slot>
         ))}
+      </div>
     </div>
+  )
+}
+
+const getStackAvatars = (children: React.ReactNode) => {
+  const avatars = Children.toArray(children)
+  return avatars.length > 3 ? [...avatars.slice(0, 2), <MoreAvatars key="more" count={avatars.length - 2} />] : avatars
+}
+
+const MoreAvatars = ({ count, className }: { count: number; className?: string }) => {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Slottable>
+          <div
+            className={cn(
+              'h-6 w-6 bg-surface rounded-full text-[.6rem] flex items-center justify-center font-semibold',
+              className,
+            )}
+          >
+            +{count}
+          </div>
+        </Slottable>
+      </TooltipTrigger>
+
+      <TooltipContent>+{count} more</TooltipContent>
+    </Tooltip>
   )
 }

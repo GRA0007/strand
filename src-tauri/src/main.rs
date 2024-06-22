@@ -4,15 +4,15 @@
 use std::{fs::create_dir_all, str::FromStr};
 
 use cli::GitCommandEvent;
+use db::Db;
 use specta::ts::ExportConfig;
 use sqlx::{sqlite::SqliteConnectOptions, SqlitePool};
-use state::StrandState;
 use tauri::{Manager, RunEvent};
 use tauri_specta::{collect_commands, collect_events, ts};
 
 pub mod cli;
 pub mod commands;
-pub mod state;
+pub mod db;
 pub mod structures;
 
 fn main() {
@@ -22,10 +22,12 @@ fn main() {
                 commands::get_branches::get_branches,
                 commands::add_repository_from_path::add_repository_from_path,
                 commands::set_open_repository::set_open_repository,
-                commands::get_state_data::get_state_data,
+                commands::get_open_repository::get_open_repository,
+                commands::get_repositories::get_repositories,
                 commands::git_fetch::git_fetch,
                 commands::get_git_command_log::get_git_command_log,
                 commands::get_graph::get_graph,
+                commands::get_commit_files::get_commit_files,
             ))
             .events(collect_events!(GitCommandEvent))
             .config(ExportConfig::new().bigint(specta::ts::BigIntExportBehavior::Number));
@@ -60,9 +62,9 @@ fn main() {
                 sqlx::migrate!().run(&pool).await?;
 
                 // Load into app state and manage with Tauri
-                let state = StrandState::new(pool);
-                state.load().await?;
-                app.manage(state);
+                let db = Db::new(pool);
+                db.load().await?;
+                app.manage(db);
 
                 Ok(())
             })
@@ -73,8 +75,8 @@ fn main() {
             if let RunEvent::Exit = event {
                 // Close database connection
                 tauri::async_runtime::block_on(async move {
-                    let state: tauri::State<StrandState> = app.state();
-                    state.pool.close().await;
+                    let db: tauri::State<Db> = app.state();
+                    db.pool.close().await;
                 });
             }
         });

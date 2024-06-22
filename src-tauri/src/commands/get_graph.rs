@@ -1,4 +1,4 @@
-use crate::{cli::GitCommand, state::GitCommandType, structures::commit::Commit};
+use crate::{cli::GitCommand, db::GitCommandType, structures::commit::Commit};
 
 use super::{CommandError, CommandResult};
 
@@ -7,10 +7,10 @@ const LOG_FIELDS: &[&str] = &[
     "P",  // Parent hashes
     "an", // Author name
     "ae", // Author email
-    "aD", // Author date
+    "at", // Author date
     "cn", // Committer name
     "ce", // Committer email
-    "cD", // Committer date
+    "ct", // Committer date
     "s",  // Commit message
     "b",  // Commit description
 ];

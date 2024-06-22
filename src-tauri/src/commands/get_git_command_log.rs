@@ -1,12 +1,13 @@
 use crate::{
     commands::CommandResult,
-    state::{GitCommandLog, StrandState},
+    db::{Db, GitCommandLog, GitCommandType},
 };
 
 #[tauri::command]
 #[specta::specta]
 pub async fn get_git_command_log(
-    state: tauri::State<'_, StrandState>,
+    db: tauri::State<'_, Db>,
+    filter: Option<GitCommandType>,
 ) -> CommandResult<Vec<GitCommandLog>> {
-    Ok(state.get_git_command_log().await?)
+    Ok(db.get_git_command_log(filter).await?)
 }

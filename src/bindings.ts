@@ -28,9 +28,17 @@ try {
     else return { status: "error", error: e  as any };
 }
 },
-async getStateData() : Promise<Result<StrandData, CommandError>> {
+async getOpenRepository() : Promise<Result<Repository | null, CommandError>> {
 try {
-    return { status: "ok", data: await TAURI_INVOKE("get_state_data") };
+    return { status: "ok", data: await TAURI_INVOKE("get_open_repository") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async getRepositories() : Promise<Result<Repository[], CommandError>> {
+try {
+    return { status: "ok", data: await TAURI_INVOKE("get_repositories") };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -44,9 +52,9 @@ try {
     else return { status: "error", error: e  as any };
 }
 },
-async getGitCommandLog() : Promise<Result<GitCommandLog[], CommandError>> {
+async getGitCommandLog(filter: GitCommandType | null) : Promise<Result<GitCommandLog[], CommandError>> {
 try {
-    return { status: "ok", data: await TAURI_INVOKE("get_git_command_log") };
+    return { status: "ok", data: await TAURI_INVOKE("get_git_command_log", { filter }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -55,6 +63,14 @@ try {
 async getGraph() : Promise<Result<Commit[], CommandError>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("get_graph") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async getCommitFiles(commitHash: GitHash) : Promise<Result<File[], CommandError>> {
+try {
+    return { status: "ok", data: await TAURI_INVOKE("get_commit_files", { commitHash }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -80,6 +96,56 @@ export type Branches = { local: LocalBranch[]; remote: RemoteBranch[] }
 export type CommandError = { Git: GitError } | "Sqlx" | "Parse" | { Other: string }
 export type Commit = { hash: GitHash; parent_hashes: GitHash[]; author: CommitUser; committer: CommitUser; message: string; description: string | null }
 export type CommitUser = { name: string; email: string; date: string; email_hash: string }
+export type File = { 
+/**
+ * None if status is addition or unmerged
+ */
+src_hash: GitHash | null; 
+/**
+ * None if status is deletion, unmerged or "work tree out of sync with the index"
+ */
+dst_hash: GitHash | null; status: FileStatus; 
+/**
+ * Optional similarity percentage (0..100) if status is copied, renamed, or modified
+ */
+score: number | null; src_path: string; 
+/**
+ * Optional destination path if status is copied or renamed
+ */
+dst_path: string | null }
+export type FileStatus = 
+/**
+ * Addition of a file
+ */
+"Added" | 
+/**
+ * Copy of a file into a new one
+ */
+"Copied" | 
+/**
+ * Deletion of a file
+ */
+"Deleted" | 
+/**
+ * Modification of the contents or mode of a file
+ */
+"Modified" | 
+/**
+ * Renaming of a file
+ */
+"Renamed" | 
+/**
+ * Change in the type of the file (regular file, symbolic link or submodule)
+ */
+"TypeChanged" | 
+/**
+ * File is unmerged (you must complete the merge before it can be committed)
+ */
+"Unmerged" | 
+/**
+ * "Unknown" change type
+ */
+"Unknown"
 export type GitCommandEvent = GitCommandLog
 export type GitCommandLog = { id: number; command: string; command_type: GitCommandType; created_at: string }
 export type GitCommandType = "Query" | "Mutation"
@@ -96,7 +162,6 @@ export type RemoteBranch = {
  */
 name: string[]; hash: GitHash }
 export type Repository = { id: number; name: string; local_path: string; created_at: string; last_opened_at: string | null; last_fetched_at: string | null; has_changes: boolean }
-export type StrandData = { repositories: Repository[]; open_repository: Repository | null }
 /**
  * If both are 0, it's in sync. If None, the tracked upstream is missing.
  */

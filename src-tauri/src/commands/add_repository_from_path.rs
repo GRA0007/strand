@@ -2,12 +2,12 @@ use std::path::PathBuf;
 
 use tokio::fs;
 
-use crate::{cli::GitError, commands::CommandResult, state::StrandState};
+use crate::{cli::GitError, commands::CommandResult, db::Db};
 
 #[tauri::command]
 #[specta::specta]
 pub async fn add_repository_from_path(
-    state: tauri::State<'_, StrandState>,
+    db: tauri::State<'_, Db>,
     local_path: String,
 ) -> CommandResult<()> {
     let local_path = PathBuf::from(local_path);
@@ -19,8 +19,8 @@ pub async fn add_repository_from_path(
         .filter(|meta| meta.is_dir())
         .ok_or(GitError::NotARepository)?;
 
-    let repository = state.add_repository(local_path).await?;
-    state.set_open_repository(Some(repository.id)).await?;
+    let repository = db.add_repository(local_path).await?;
+    db.set_open_repository(Some(repository.id)).await?;
 
     Ok(())
 }

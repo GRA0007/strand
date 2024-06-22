@@ -3,7 +3,7 @@ use specta::Type;
 
 use crate::{
     cli::GitCommand,
-    state::GitCommandType,
+    db::GitCommandType,
     structures::branch::{LocalBranch, RemoteBranch},
 };
 

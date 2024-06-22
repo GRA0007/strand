@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use specta::Type;
-use sqlx::{Pool, Sqlite};
+use sqlx::{prelude::FromRow, sqlite::SqliteRow, Pool, QueryBuilder, Row, Sqlite};
 use tokio::sync::Mutex;
 
 #[derive(Serialize, Clone, Type, Debug)]
@@ -42,33 +42,41 @@ pub struct GitCommandLog {
     pub created_at: NaiveDateTime,
 }
 
+impl<'r> FromRow<'r, SqliteRow> for GitCommandLog {
+    fn from_row(row: &'r SqliteRow) -> Result<Self, sqlx::Error> {
+        Ok(Self {
+            id: row.try_get("id")?,
+            command: row.try_get("command")?,
+            command_type: row.try_get::<i64, _>("command_type")?.into(),
+            created_at: row.try_get("created_at")?,
+        })
+    }
+}
+
 #[derive(Serialize, Clone, Default, Type)]
-pub struct StrandData {
-    pub repositories: Vec<Repository>,
+pub struct State {
     pub open_repository: Option<Repository>,
 }
 
-pub struct StrandState {
+pub struct Db {
     pub pool: Pool<Sqlite>,
-    pub data: Mutex<StrandData>,
+    /// In-memory state
+    pub state: Mutex<State>,
 }
 
-impl StrandState {
+impl Db {
     pub fn new(pool: Pool<Sqlite>) -> Self {
         Self {
             pool,
-            data: Default::default(),
+            state: Default::default(),
         }
     }
 
+    /// Load in-memory state from the DB
     pub async fn load(&self) -> Result<(), sqlx::Error> {
-        let mut data = self.data.lock().await;
+        let mut state = self.state.lock().await;
 
-        data.repositories = sqlx::query_as!(Repository, "SELECT * FROM repository")
-            .fetch_all(&self.pool)
-            .await?;
-
-        data.open_repository = sqlx::query_as!(Repository, "SELECT * FROM repository WHERE id IN (SELECT open_repository_id FROM state WHERE id = 0)")
+        state.open_repository = sqlx::query_as!(Repository, "SELECT * FROM repository WHERE id IN (SELECT open_repository_id FROM state WHERE id = 0)")
             .fetch_one(&self.pool)
             .await
             .ok();
@@ -77,8 +85,6 @@ impl StrandState {
     }
 
     pub async fn add_repository(&self, local_path: PathBuf) -> Result<Repository, sqlx::Error> {
-        let mut data = self.data.lock().await;
-
         let name = local_path
             .file_name()
             .map(|name| name.to_str())
@@ -98,16 +104,20 @@ impl StrandState {
             .fetch_one(&self.pool)
             .await?;
 
-        data.repositories.push(repository.clone());
-
         Ok(repository)
     }
 
+    pub async fn get_repositories(&self) -> Result<Vec<Repository>, sqlx::Error> {
+        sqlx::query_as!(Repository, "SELECT * FROM repository")
+            .fetch_all(&self.pool)
+            .await
+    }
+
     pub async fn set_open_repository(&self, id: Option<i64>) -> Result<(), sqlx::Error> {
-        let mut data = self.data.lock().await;
+        let mut state = self.state.lock().await;
 
         // Repository is already set
-        if match data.open_repository.as_ref() {
+        if match state.open_repository.as_ref() {
             Some(repo) => id.is_some_and(|id| id == repo.id),
             None => id.is_none(),
         } {
@@ -128,7 +138,7 @@ impl StrandState {
             .await?;
         }
 
-        data.open_repository = match id {
+        state.open_repository = match id {
             Some(id) => Some(
                 sqlx::query_as!(Repository, "SELECT * FROM repository WHERE id = ?", id)
                     .fetch_one(&self.pool)
@@ -146,9 +156,9 @@ impl StrandState {
         command: String,
         command_type: GitCommandType,
     ) -> Result<GitCommandLog, sqlx::Error> {
-        let data = self.data.lock().await;
+        let state = self.state.lock().await;
 
-        match &data.open_repository {
+        match &state.open_repository {
             Some(open_repository) => {
                 let command_type = command_type as i64;
                 let id = sqlx::query!(
@@ -174,19 +184,22 @@ impl StrandState {
     }
 
     /// Get the full git command log history for the open repository
-    pub async fn get_git_command_log(&self) -> Result<Vec<GitCommandLog>, sqlx::Error> {
-        let data = self.data.lock().await;
+    pub async fn get_git_command_log(
+        &self,
+        filter: Option<GitCommandType>,
+    ) -> Result<Vec<GitCommandLog>, sqlx::Error> {
+        let state = self.state.lock().await;
 
-        match &data.open_repository.as_ref().map(|r| r.id) {
+        match &state.open_repository.as_ref().map(|r| r.id) {
             Some(open_repository_id) => {
-                sqlx::query_as!(
-                    GitCommandLog,
-                    // TODO: sort by date, and paginate
-                    "SELECT id, command, command_type, created_at FROM git_command_log WHERE repository_id = ?",
-                    open_repository_id
-                )
-                .fetch_all(&self.pool)
-                .await
+                // TODO: sort by date, and paginate
+                let mut query = QueryBuilder::new("SELECT id, command, command_type, created_at FROM git_command_log WHERE repository_id = ");
+                query.push_bind(open_repository_id);
+                if let Some(command_type) = filter {
+                    query.push(" AND command_type = ");
+                    query.push_bind(command_type as i64);
+                }
+                query.build_query_as().fetch_all(&self.pool).await
             }
             None => panic!("TODO: handle no open repo"),
         }

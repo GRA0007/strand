@@ -23,8 +23,6 @@ Strand intends to be a simple but powerful graphical user interface for [Git](ht
 
 You can download the latest release for your device from the [GitHub releases](https://github.com/GRA0007/strand/releases).
 
-Note that until I start signing my releases, you may encounter a `“Strand.app” is damaged and can’t be opened. You should move it to the Bin.` error on MacOS. You'll need to open a terminal and run `xattr -c path/to/Strand.app` to open it.
-
 ## Contributing
 
 Strand is still in the early stages of design and development, so any contributions are likely to be rejected. If you'd like to get it running locally however, follow the steps below.
