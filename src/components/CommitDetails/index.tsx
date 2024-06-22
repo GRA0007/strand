@@ -40,7 +40,9 @@ export const CommitDetails = () => {
           <Panel className="bg-surface rounded-md rounded-b-none" defaultSize={15}>
             <div className="overflow-y-auto h-full px-3 py-2">
               <div>{selectedCommit.message}</div>
-              {selectedCommit.description && <div className="text-xs pt-2">{selectedCommit.description}</div>}
+              {selectedCommit.description && (
+                <div className="text-xs pt-2 whitespace-pre-wrap">{selectedCommit.description}</div>
+              )}
             </div>
           </Panel>
 
