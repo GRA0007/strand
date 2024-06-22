@@ -1,10 +1,10 @@
 use std::str::FromStr;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use specta::Type;
 
-#[derive(Debug, Serialize, Type)]
-pub struct GitHash(String);
+#[derive(Debug, Serialize, Deserialize, Type)]
+pub struct GitHash(pub String);
 
 impl FromStr for GitHash {
     type Err = ();
