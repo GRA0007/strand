@@ -12,11 +12,13 @@ pub async fn get_commit_files(
     app_handle: tauri::AppHandle,
     commit_hash: GitHash,
 ) -> CommandResult<Vec<File>> {
-    let files = GitCommand::new("diff")
-        .arg(format!("{}^ {}", commit_hash.0, commit_hash.0))
+    let files = GitCommand::new("show")
+        .arg(commit_hash.0)
         .arg("--raw")
         .arg("--abbrev=40")
         .arg("-z")
+        .arg("-m")
+        .arg("--format=")
         .run(&app_handle, GitCommandType::Query)
         .await?;
 

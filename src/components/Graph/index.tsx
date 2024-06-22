@@ -1,18 +1,16 @@
 import { useAtom } from 'jotai'
 import { useEffect } from 'react'
 import { commands } from '../../bindings'
+import { useOpenRepository } from '../../data/useOpenRepository'
 import { selectedCommitHashAtom } from '../../ui-state'
 import { useCommandQuery } from '../../utils/useCommandQuery'
 import { CommitRow } from './CommitRow'
 
 export const Graph = () => {
-  const { data: openRepository } = useCommandQuery({
-    queryKey: ['openRepository'],
-    queryFn: commands.getOpenRepository,
-  })
+  const openRepository = useOpenRepository()
 
   const { data: commits } = useCommandQuery({
-    queryKey: ['graph'],
+    queryKey: ['graph', openRepository?.id],
     queryFn: commands.getGraph,
     enabled: Boolean(openRepository),
     refetchOnWindowFocus: true,

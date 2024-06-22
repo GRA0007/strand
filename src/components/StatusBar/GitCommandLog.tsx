@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { FilterIcon, PencilIcon, SearchIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { events, type GitCommandLog as GitCommandLogType, type GitCommandType, commands } from '../../bindings'
+import { useOpenRepository } from '../../data/useOpenRepository'
 import { LogIcon } from '../../res/LogIcon'
 import { formatDate } from '../../utils/formatDate'
 import { useCommandQuery } from '../../utils/useCommandQuery'
@@ -27,10 +28,12 @@ export const GitCommandLog = () => {
     }
   }, [filter])
 
+  const openRepository = useOpenRepository()
+
   const { data: log, refetch } = useCommandQuery({
-    queryKey: ['gitCommandLog'],
+    queryKey: ['gitCommandLog', openRepository?.id],
     queryFn: () => commands.getGitCommandLog(filter === 'all' ? null : filter),
-    enabled: isOpen,
+    enabled: Boolean(isOpen && openRepository),
   })
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: Refetch when filter changes

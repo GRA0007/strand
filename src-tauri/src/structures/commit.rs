@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use chrono::{DateTime, NaiveDateTime};
 use serde::Serialize;
 use sha2::Digest;
 use specta::Type;
@@ -10,7 +11,7 @@ use super::hash::GitHash;
 pub struct CommitUser {
     pub name: String,
     pub email: String,
-    pub date: String,
+    pub date: NaiveDateTime,
     pub email_hash: String,
 }
 
@@ -36,32 +37,33 @@ impl FromStr for Commit {
                 .split_ascii_whitespace()
                 .map(|hash| hash.parse::<GitHash>().map_err(|_err| ()))
                 .collect::<Result<Vec<_>, Self::Err>>()?,
-            author: {
-                let name = parts.next().ok_or(())?.into();
-                let email: String = parts.next().ok_or(())?.into();
-                let mut email_hash = sha2::Sha256::new();
-                email_hash.update(email.clone().trim().to_lowercase());
-                CommitUser {
-                    name,
-                    email,
-                    email_hash: format!("{:x}", email_hash.finalize()),
-                    date: parts.next().ok_or(())?.into(),
-                }
-            },
-            committer: {
-                let name = parts.next().ok_or(())?.into();
-                let email: String = parts.next().ok_or(())?.into();
-                let mut email_hash = sha2::Sha256::new();
-                email_hash.update(email.clone().trim().to_lowercase());
-                CommitUser {
-                    name,
-                    email,
-                    email_hash: format!("{:x}", email_hash.finalize()),
-                    date: parts.next().ok_or(())?.into(),
-                }
-            },
+            author: parse_user(
+                parts.next().ok_or(())?,
+                parts.next().ok_or(())?,
+                parts.next().ok_or(())?,
+            )?,
+            committer: parse_user(
+                parts.next().ok_or(())?,
+                parts.next().ok_or(())?,
+                parts.next().ok_or(())?,
+            )?,
             message: parts.next().ok_or(())?.into(),
             description: parts.next().or(Some("")).map(|s| s.into()),
         })
     }
+}
+
+fn parse_user(name: &str, email: &str, date: &str) -> Result<CommitUser, ()> {
+    Ok(CommitUser {
+        name: name.into(),
+        email: email.into(),
+        email_hash: {
+            let mut email_hash = sha2::Sha256::new();
+            email_hash.update(email.trim().to_lowercase());
+            format!("{:x}", email_hash.finalize())
+        },
+        date: DateTime::from_timestamp(date.parse().map_err(|_err| ())?, 0)
+            .ok_or(())?
+            .naive_utc(),
+    })
 }

@@ -10,19 +10,17 @@ import {
 } from 'lucide-react'
 import { PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 import { type UpstreamTrack, commands } from '../../bindings'
+import { useOpenRepository } from '../../data/useOpenRepository'
 import { useCommandQuery } from '../../utils/useCommandQuery'
 import { BranchListPanel } from '../BranchListPanel'
 import { IconButton } from '../UI/IconButton'
 import { TooltipContent } from '../UI/Tooltip'
 
 export const Branches = () => {
-  const { data: openRepository } = useCommandQuery({
-    queryKey: ['openRepository'],
-    queryFn: commands.getOpenRepository,
-  })
+  const openRepository = useOpenRepository()
 
   const { data } = useCommandQuery({
-    queryKey: ['branches'],
+    queryKey: ['branches', openRepository?.id],
     enabled: Boolean(openRepository),
     queryFn: commands.getBranches,
     refetchOnWindowFocus: true,

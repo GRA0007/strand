@@ -22,12 +22,18 @@ export const CommitRow = ({
           )}
         >
           <AvatarStack className="h-6 w-6 border-2 border-orange-700">
-            <Avatar emailHash={commit.author.email_hash} name={commit.author.name} email={commit.author.email} />
+            <Avatar
+              emailHash={commit.author.email_hash}
+              name={commit.author.name}
+              tooltip
+              email={commit.author.email}
+            />
 
             {commit.author.email !== commit.committer.email && (
               <Avatar
                 emailHash={commit.committer.email_hash}
                 name={commit.committer.name}
+                tooltip
                 email={commit.committer.email}
               />
             )}

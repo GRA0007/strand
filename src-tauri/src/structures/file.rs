@@ -27,9 +27,10 @@ impl FromStr for File {
         let src_hash = parse_hash(parts.next().ok_or(())?);
         let dst_hash = parse_hash(parts.next().ok_or(())?);
 
-        let (status, score) = parts.next().ok_or(())?.split_at(1);
+        let (status, paths) = parts.next().ok_or(())?.split_once('\x00').ok_or(())?;
 
-        let paths = parts.next().ok_or(())?.strip_prefix('\x00').ok_or(())?;
+        let (status, score) = status.split_at(1);
+
         let (src_path, dst_path) = match paths.split_once('\x00') {
             Some((src_path, dst_path)) => (src_path.into(), Some(dst_path.into())),
             None => (paths.into(), None),

@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { open } from '@tauri-apps/plugin-dialog'
 import { CheckIcon, ChevronDownIcon, CopyIcon, FolderIcon, PlusIcon } from 'lucide-react'
 import { commands } from '../../bindings'
+import { useOpenRepository } from '../../data/useOpenRepository'
 import { cn } from '../../utils/cn'
 import { useCommandMutation } from '../../utils/useCommandMutation'
 import { useCommandQuery } from '../../utils/useCommandQuery'
@@ -13,10 +14,7 @@ import { TooltipContent } from '../UI/Tooltip'
 export const RepositorySelector = () => {
   const queryClient = useQueryClient()
 
-  const { data: openRepository } = useCommandQuery({
-    queryKey: ['openRepository'],
-    queryFn: commands.getOpenRepository,
-  })
+  const openRepository = useOpenRepository()
 
   const { data: repositories } = useCommandQuery({
     queryKey: ['repositories'],
@@ -25,12 +23,16 @@ export const RepositorySelector = () => {
 
   const addRepository = useCommandMutation({
     mutationFn: commands.addRepositoryFromPath,
-    onSuccess: () => queryClient.invalidateQueries(),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['openRepository'] }),
+        queryClient.invalidateQueries({ queryKey: ['repositories'] }),
+      ]),
   })
 
   const setOpenRepository = useCommandMutation({
     mutationFn: commands.setOpenRepository,
-    onSuccess: () => queryClient.invalidateQueries(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['openRepository'] }),
   })
 
   return (

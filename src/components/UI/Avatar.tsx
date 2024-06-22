@@ -8,29 +8,47 @@ import { TooltipContent } from './Tooltip'
 export const Avatar = ({
   emailHash,
   name,
-  email,
   size = 40,
   className,
-}: { emailHash: string; name: string; email: string; size?: number; className?: string }) => {
+  ...props
+}: {
+  emailHash: string
+  name: string
+  /** The size of the image to load (should be at least 2x the pixel size) */
+  size?: number
+  className?: string
+} & (
+  | {
+      tooltip?: false
+    }
+  | {
+      tooltip: true
+      email: string
+    }
+)) => {
+  const avatar = (
+    <Root className={cn('relative flex shrink-0 overflow-hidden rounded-full h-6 w-6 text-[.6rem]', className)}>
+      <AvatarImage
+        src={`https://gravatar.com/avatar/${emailHash}?s=${size}&d=404`}
+        className="aspect-square h-full w-full object-cover"
+      />
+      <AvatarFallback className="flex h-full w-full items-center justify-center rounded-full bg-surface font-semibold">
+        {getInitials(name)}
+      </AvatarFallback>
+    </Root>
+  )
+
+  if (!props.tooltip) return avatar
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Slottable>
-          <Root className={cn('relative flex shrink-0 overflow-hidden rounded-full h-6 w-6 text-[.6rem]', className)}>
-            <AvatarImage
-              src={`https://gravatar.com/avatar/${emailHash}?s=${size}&d=404`}
-              className="aspect-square h-full w-full object-cover"
-            />
-            <AvatarFallback className="flex h-full w-full items-center justify-center rounded-full bg-surface font-semibold">
-              {getInitials(name)}
-            </AvatarFallback>
-          </Root>
-        </Slottable>
+        <Slottable>{avatar}</Slottable>
       </TooltipTrigger>
 
       <TooltipContent>
         {name}
-        <span className="text-foreground/60 text-[.6rem] block">{email}</span>
+        <span className="text-foreground/60 text-[.6rem] block">{props.email}</span>
       </TooltipContent>
     </Tooltip>
   )

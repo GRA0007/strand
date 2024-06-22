@@ -67,6 +67,14 @@ try {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+async getCommitFiles(commitHash: GitHash) : Promise<Result<File[], CommandError>> {
+try {
+    return { status: "ok", data: await TAURI_INVOKE("get_commit_files", { commitHash }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -88,6 +96,56 @@ export type Branches = { local: LocalBranch[]; remote: RemoteBranch[] }
 export type CommandError = { Git: GitError } | "Sqlx" | "Parse" | { Other: string }
 export type Commit = { hash: GitHash; parent_hashes: GitHash[]; author: CommitUser; committer: CommitUser; message: string; description: string | null }
 export type CommitUser = { name: string; email: string; date: string; email_hash: string }
+export type File = { 
+/**
+ * None if status is addition or unmerged
+ */
+src_hash: GitHash | null; 
+/**
+ * None if status is deletion, unmerged or "work tree out of sync with the index"
+ */
+dst_hash: GitHash | null; status: FileStatus; 
+/**
+ * Optional similarity percentage (0..100) if status is copied, renamed, or modified
+ */
+score: number | null; src_path: string; 
+/**
+ * Optional destination path if status is copied or renamed
+ */
+dst_path: string | null }
+export type FileStatus = 
+/**
+ * Addition of a file
+ */
+"Added" | 
+/**
+ * Copy of a file into a new one
+ */
+"Copied" | 
+/**
+ * Deletion of a file
+ */
+"Deleted" | 
+/**
+ * Modification of the contents or mode of a file
+ */
+"Modified" | 
+/**
+ * Renaming of a file
+ */
+"Renamed" | 
+/**
+ * Change in the type of the file (regular file, symbolic link or submodule)
+ */
+"TypeChanged" | 
+/**
+ * File is unmerged (you must complete the merge before it can be committed)
+ */
+"Unmerged" | 
+/**
+ * "Unknown" change type
+ */
+"Unknown"
 export type GitCommandEvent = GitCommandLog
 export type GitCommandLog = { id: number; command: string; command_type: GitCommandType; created_at: string }
 export type GitCommandType = "Query" | "Mutation"
