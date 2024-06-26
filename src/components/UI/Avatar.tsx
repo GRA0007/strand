@@ -54,12 +54,14 @@ export const Avatar = ({
   )
 }
 
+/** Returns the first 2 initials of the user's name */
 const getInitials = (name: string) => {
   if (name.includes('[bot]')) return '🤖'
 
   return name
     .split(' ')
-    .map((p) => p[0])
+    .map((p) => Array.from(p)[0])
+    .slice(0, 2)
     .join('')
     .toLocaleUpperCase()
 }
