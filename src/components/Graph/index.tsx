@@ -58,7 +58,6 @@ export const Graph = () => {
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-    // biome-ignore lint/correctness/useExhaustiveDependencies: react compiler
   }, [handleKeyDown])
 
   return (

@@ -30,7 +30,7 @@ export const CommitDetails = () => {
 
   return (
     <PanelGroup direction="vertical">
-      {!selectedCommit && (
+      {!selectedCommit && openRepository && (
         <div className="h-full w-full flex items-center justify-center">
           <LoaderCircleIcon className="animate-spin h-4 w-4" />
         </div>
