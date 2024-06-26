@@ -1,9 +1,9 @@
-import { useAtomValue } from 'jotai'
+import { useAtom, useAtomValue } from 'jotai'
 import { LoaderCircleIcon } from 'lucide-react'
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 import { type CommitUser, commands } from '../../bindings'
 import { useOpenRepository } from '../../data/useOpenRepository'
-import { selectedCommitHashAtom } from '../../ui-state'
+import { calculateFileId, selectedCommitHashAtom, selectedFileIdAtom } from '../../ui-state'
 import { formatDate } from '../../utils/formatDate'
 import { useCommandQuery } from '../../utils/useCommandQuery'
 import { Avatar } from '../UI/Avatar'
@@ -12,7 +12,8 @@ import { CommitStats } from './Stats'
 
 export const CommitDetails = () => {
   const openRepository = useOpenRepository()
-  const selectedHash = useAtomValue(selectedCommitHashAtom)
+  const selectedCommitHash = useAtomValue(selectedCommitHashAtom)
+  const [selectedFileId, setSelectedFileId] = useAtom(selectedFileIdAtom)
 
   const { data: commits } = useCommandQuery({
     queryKey: ['graph', openRepository?.id],
@@ -21,12 +22,12 @@ export const CommitDetails = () => {
   })
 
   const { data: files } = useCommandQuery({
-    queryKey: ['graph', openRepository?.id, selectedHash],
-    queryFn: () => commands.getCommitFiles(selectedHash as string),
-    enabled: Boolean(openRepository && selectedHash),
+    queryKey: ['graph', openRepository?.id, selectedCommitHash],
+    queryFn: () => commands.getCommitFiles(selectedCommitHash as string),
+    enabled: Boolean(openRepository && selectedCommitHash),
   })
 
-  const selectedCommit = commits?.find((c) => c.hash === selectedHash)
+  const selectedCommit = commits?.find((c) => c.hash === selectedCommitHash)
 
   return (
     <PanelGroup direction="vertical">
@@ -71,9 +72,17 @@ export const CommitDetails = () => {
 
                 <div className="bg-surface rounded-md flex-1 flex flex-col min-h-0">
                   <div className="overflow-y-auto flex-1 pt-1">
-                    {files.map((file) => (
-                      <CommitFile key={`${file.src_hash ?? 0}_${file.dst_hash ?? 0}`} file={file} />
-                    ))}
+                    {files.map((file) => {
+                      const id = calculateFileId(file.src_hash, file.dst_hash)
+                      return (
+                        <CommitFile
+                          key={id}
+                          file={file}
+                          isSelected={selectedFileId === id}
+                          onSelect={() => setSelectedFileId(id)}
+                        />
+                      )
+                    })}
                   </div>
 
                   <div className="border-t border-foreground/20 px-3 py-2 text-xs flex gap-4 items-center">

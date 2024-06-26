@@ -17,7 +17,7 @@ export const CommitRow = ({
       >
         <div
           className={cn(
-            'flex items-center h-6 rounded-l-full flex-1',
+            'flex items-center h-6 rounded-l-full flex-1 w-full',
             isSelected ? 'bg-orange-900' : 'group-hover/commit-row:bg-orange-900/20',
           )}
         >

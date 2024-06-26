@@ -73,7 +73,6 @@ export const AvatarStack = ({ children, className }: { children: React.ReactNode
       <div className="flex group absolute">
         {avatars.map((child, i) => (
           <Slot
-            // biome-ignore lint/suspicious/noArrayIndexKey: avatars won't change order
             key={i}
             className={cn(
               className,
