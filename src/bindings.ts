@@ -75,6 +75,14 @@ try {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+async getFileDiff(commitHash: GitHash, path: string) : Promise<Result<string, CommandError>> {
+try {
+    return { status: "ok", data: await TAURI_INVOKE("get_file_diff", { commitHash, path }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
