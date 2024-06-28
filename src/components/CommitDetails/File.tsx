@@ -1,15 +1,15 @@
 import { Tooltip, TooltipTrigger } from '@radix-ui/react-tooltip'
 import { FileInputIcon, MinusIcon, PencilIcon, PlusIcon } from 'lucide-react'
 import type { File } from '../../bindings'
-import { calculateFileId } from '../../ui-state'
 import { cn } from '../../utils/cn'
 import { TooltipContent } from '../UI/Tooltip'
 
 export const CommitFile = ({
+  id,
   file,
   isSelected,
   onSelect,
-}: { file: File; isSelected: boolean; onSelect: () => void }) => {
+}: { id: string; file: File; isSelected: boolean; onSelect: () => void }) => {
   const pathParts = (file.dst_path ?? file.src_path).split('/')
   const path = pathParts.slice(0, -1).join('/')
   const filename = pathParts.slice(-1)[0]
@@ -21,7 +21,7 @@ export const CommitFile = ({
         isSelected ? 'bg-foreground/20' : 'hover:bg-foreground/10',
       )}
       onPointerDown={() => onSelect()}
-      id={calculateFileId(file.src_hash, file.dst_hash)}
+      id={id}
       tabIndex={-1}
     >
       {(file.status === 'Added' || file.status === 'Copied') && (

@@ -73,10 +73,11 @@ export const CommitDetails = () => {
                 <div className="bg-surface rounded-md flex-1 flex flex-col min-h-0">
                   <div className="overflow-y-auto flex-1 pt-1">
                     {files.map((file) => {
-                      const id = calculateFileId(file.src_hash, file.dst_hash)
+                      const id = calculateFileId(selectedCommit.hash, file.src_path)
                       return (
                         <CommitFile
                           key={id}
+                          id={id}
                           file={file}
                           isSelected={selectedFileId === id}
                           onSelect={() => setSelectedFileId(id)}
