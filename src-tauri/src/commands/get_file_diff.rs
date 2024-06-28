@@ -18,5 +18,11 @@ pub async fn get_file_diff(
         .run(&app_handle, GitCommandType::Query)
         .await?;
 
+    let diff = diff
+        .lines()
+        .skip_while(|line| !line.starts_with("@@"))
+        .collect::<Vec<_>>()
+        .join("\n");
+
     Ok(diff)
 }

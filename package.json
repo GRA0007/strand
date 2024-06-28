@@ -42,6 +42,7 @@
     "react": "19.0.0-rc-107a2f8c3e-20240617",
     "react-dom": "19.0.0-rc-107a2f8c3e-20240617",
     "react-resizable-panels": "^2.0.19",
+    "shiki": "^1.10.0",
     "tailwind-merge": "^2.3.0",
     "tailwindcss": "^3.4.4",
     "tailwindcss-animate": "^1.0.7",

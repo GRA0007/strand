@@ -1,6 +1,7 @@
 import { useAtom, useAtomValue } from 'jotai'
 import { LoaderCircleIcon, XIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { type ShikiTransformer, codeToHtml } from 'shiki'
 import { commands } from '../../bindings'
 import { useOpenRepository } from '../../data/useOpenRepository'
 import { calculateFileId, selectedCommitHashAtom, selectedFileIdAtom } from '../../ui-state'
@@ -36,6 +37,17 @@ export const FileDiff = () => {
     enabled: Boolean(openRepository && selectedCommitHash && selectedFile),
   })
 
+  const [html, setHtml] = useState('')
+  useEffect(() => {
+    if (!selectedFile) return
+    const pathParts = selectedFile.src_path.split('.')
+    codeToHtml(diff ?? '', {
+      lang: pathParts[pathParts.length - 1],
+      theme: 'github-dark-default',
+      transformers: [diffTransformer],
+    }).then(setHtml)
+  }, [diff])
+
   return (
     <div
       className={cn(
@@ -63,11 +75,22 @@ export const FileDiff = () => {
         </div>
       )}
 
-      {diff && (
-        <div className="flex-1 overflow-auto px-3 py-2">
-          <pre className="text-sm">{diff}</pre>
-        </div>
-      )}
+      {diff && <div className="flex-1 overflow-auto py-2 text-sm" dangerouslySetInnerHTML={{ __html: html }} />}
     </div>
   )
+}
+
+const diffTransformer: ShikiTransformer = {
+  line(node) {
+    let firstTextElement = node.children[0]
+    while (firstTextElement.type !== 'text' && firstTextElement.type === 'element') {
+      firstTextElement = firstTextElement.children[0]
+    }
+    const status = firstTextElement.value[0]
+    if (status === '@') return this.addClassToHast(node, 'hunk')
+
+    firstTextElement.value = firstTextElement.value.slice(1)
+    if (status === '+') return this.addClassToHast(node, 'added')
+    if (status === '-') return this.addClassToHast(node, 'removed')
+  },
 }

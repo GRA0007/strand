@@ -1642,6 +1642,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@shikijs/core@npm:1.10.0":
+  version: 1.10.0
+  resolution: "@shikijs/core@npm:1.10.0"
+  checksum: 10/301436c7c4cb048b8683af74eb306fe728112e231b17e56f3c7b28f82ac664c3b56f620e54bdfc9cfd99cbab486ec29ce98e1123d22bdc43a896c4f73b9aa7d8
+  languageName: node
+  linkType: hard
+
 "@tanstack/query-core@npm:5.48.0":
   version: 5.48.0
   resolution: "@tanstack/query-core@npm:5.48.0"
@@ -4322,6 +4329,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"shiki@npm:^1.10.0":
+  version: 1.10.0
+  resolution: "shiki@npm:1.10.0"
+  dependencies:
+    "@shikijs/core": "npm:1.10.0"
+  checksum: 10/e5c844acece5eef2b796d63040ff9655fbd1070d10c50726eebaddc0506b9bdaee7fc28c7299168ef1a4eb9007db7e928bd03a80d3918c37df0fe3a96363d66b
+  languageName: node
+  linkType: hard
+
 "signal-exit@npm:^3.0.2":
   version: 3.0.7
   resolution: "signal-exit@npm:3.0.7"
@@ -4438,6 +4454,7 @@ __metadata:
     react: "npm:19.0.0-rc-107a2f8c3e-20240617"
     react-dom: "npm:19.0.0-rc-107a2f8c3e-20240617"
     react-resizable-panels: "npm:^2.0.19"
+    shiki: "npm:^1.10.0"
     tailwind-merge: "npm:^2.3.0"
     tailwindcss: "npm:^3.4.4"
     tailwindcss-animate: "npm:^1.0.7"

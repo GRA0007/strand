@@ -57,3 +57,24 @@
 *:not(input) {
   @apply select-none cursor-default;
 }
+
+@layer components {
+  .shiki {
+    @apply !bg-transparent block;
+
+    code {
+      @apply block w-max min-w-full;
+    }
+
+    .line {
+      @apply inline-block pl-7 pr-3 relative w-full after:content-['_'];
+
+      &.hunk { @apply bg-info/30 py-1 [&_*]:!text-foreground/70; }
+      &.added { @apply bg-success/20 before:content-['+']; }
+      &.removed { @apply bg-error/20 before:content-['-']; }
+      &.added::before, &.removed::before {
+        @apply absolute left-0 top-0 bottom-0 flex items-center pl-2;
+      }
+    }
+  }
+}
