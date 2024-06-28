@@ -80,7 +80,7 @@ export const CommitDetails = () => {
                           id={id}
                           file={file}
                           isSelected={selectedFileId === id}
-                          onSelect={() => setSelectedFileId(id)}
+                          onSelect={() => setSelectedFileId((currentId) => (currentId === id ? null : id))}
                         />
                       )
                     })}
