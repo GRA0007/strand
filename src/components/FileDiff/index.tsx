@@ -1,7 +1,6 @@
 import { useAtom, useAtomValue } from 'jotai'
 import { LoaderCircleIcon, XIcon } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { type ShikiTransformer, codeToHtml } from 'shiki'
+import { Fragment, useEffect, useState } from 'react'
 import { commands } from '../../bindings'
 import { useOpenRepository } from '../../data/useOpenRepository'
 import { calculateFileId, selectedCommitHashAtom, selectedFileIdAtom } from '../../ui-state'
@@ -37,17 +36,6 @@ export const FileDiff = () => {
     enabled: Boolean(openRepository && selectedCommitHash && selectedFile),
   })
 
-  const [html, setHtml] = useState('')
-  useEffect(() => {
-    if (!selectedFile) return
-    const pathParts = selectedFile.src_path.split('.')
-    codeToHtml(diff ?? '', {
-      lang: pathParts[pathParts.length - 1],
-      theme: 'github-dark-default',
-      transformers: [diffTransformer],
-    }).then(setHtml)
-  }, [diff])
-
   return (
     <div
       className={cn(
@@ -75,22 +63,61 @@ export const FileDiff = () => {
         </div>
       )}
 
-      {diff && <div className="flex-1 overflow-auto py-2 text-sm" dangerouslySetInnerHTML={{ __html: html }} />}
+      {diff && (
+        <pre className="flex-1 overflow-auto py-2 text-sm">
+          <code className="w-max min-w-full block">
+            {diff.map((hunk) => (
+              <Fragment key={hunk.header}>
+                <div className="bg-info/30 py-1 px-3 text-foreground/70">{hunk.header}</div>
+                {hunk.lines.map((line, i) => (
+                  <Fragment key={`${hunk.header}-${i}`}>
+                    {line.some((w) => w.status !== 'Added') && (
+                      <div className={cn('px-3', line.some((w) => w.status === 'Removed') && 'bg-error/20')}>
+                        {line.some((w) => w.status === 'Removed') ? '- ' : '  '}
+                        {line
+                          .filter((w) => w.status !== 'Added')
+                          .map((word, j) => (
+                            <span
+                              key={`${hunk.header}-${i}-${j}`}
+                              className={cn(
+                                'inline-block',
+                                word.status === 'Removed' &&
+                                  line.filter((l) => l.text.trim().length > 0).some((l) => l.status === 'Unmodified') &&
+                                  'bg-error/20',
+                              )}
+                            >
+                              {word.text}
+                            </span>
+                          ))}
+                      </div>
+                    )}
+                    {line.some((w) => w.status === 'Added') && (
+                      <div className="px-3 bg-success/20">
+                        +{' '}
+                        {line
+                          .filter((w) => w.status !== 'Removed')
+                          .map((word, j) => (
+                            <span
+                              key={`${hunk.header}-${i}-${j}`}
+                              className={cn(
+                                'inline-block',
+                                word.status === 'Added' &&
+                                  line.filter((l) => l.text.trim().length > 0).some((l) => l.status === 'Unmodified') &&
+                                  'bg-success/20',
+                              )}
+                            >
+                              {word.text}
+                            </span>
+                          ))}
+                      </div>
+                    )}
+                  </Fragment>
+                ))}
+              </Fragment>
+            ))}
+          </code>
+        </pre>
+      )}
     </div>
   )
-}
-
-const diffTransformer: ShikiTransformer = {
-  line(node) {
-    let firstTextElement = node.children[0]
-    while (firstTextElement.type !== 'text' && firstTextElement.type === 'element') {
-      firstTextElement = firstTextElement.children[0]
-    }
-    const status = firstTextElement.value[0]
-    if (status === '@') return this.addClassToHast(node, 'hunk')
-
-    firstTextElement.value = firstTextElement.value.slice(1)
-    if (status === '+') return this.addClassToHast(node, 'added')
-    if (status === '-') return this.addClassToHast(node, 'removed')
-  },
 }

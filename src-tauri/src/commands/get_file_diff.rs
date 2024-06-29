@@ -1,6 +1,10 @@
-use crate::{cli::GitCommand, db::GitCommandType, structures::hash::GitHash};
+use crate::{
+    cli::GitCommand,
+    db::GitCommandType,
+    structures::{file_diff::FileDiff, hash::GitHash},
+};
 
-use super::CommandResult;
+use super::{CommandError, CommandResult};
 
 #[tauri::command]
 #[specta::specta]
@@ -8,9 +12,9 @@ pub async fn get_file_diff(
     app_handle: tauri::AppHandle,
     commit_hash: GitHash,
     path: String,
-) -> CommandResult<String> {
+) -> CommandResult<FileDiff> {
     let diff = GitCommand::new("diff")
-        // .arg("--word-diff=porcelain")
+        .arg("--word-diff=porcelain")
         .arg(format!("{}^", commit_hash.0))
         .arg(commit_hash.0)
         .arg("--")
@@ -24,5 +28,5 @@ pub async fn get_file_diff(
         .collect::<Vec<_>>()
         .join("\n");
 
-    Ok(diff)
+    diff.parse().map_err(|_err| CommandError::Parse)
 }

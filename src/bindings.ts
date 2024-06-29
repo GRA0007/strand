@@ -76,7 +76,7 @@ try {
     else return { status: "error", error: e  as any };
 }
 },
-async getFileDiff(commitHash: GitHash, path: string) : Promise<Result<string, CommandError>> {
+async getFileDiff(commitHash: GitHash, path: string) : Promise<Result<FileDiff, CommandError>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("get_file_diff", { commitHash, path }) };
 } catch (e) {
@@ -104,6 +104,12 @@ export type Branches = { local: LocalBranch[]; remote: RemoteBranch[] }
 export type CommandError = { Git: GitError } | "Sqlx" | "Parse" | { Other: string }
 export type Commit = { hash: GitHash; parent_hashes: GitHash[]; author: CommitUser; committer: CommitUser; message: string; description: string | null }
 export type CommitUser = { name: string; email: string; date: string; email_hash: string }
+export type DiffHunk = { 
+/**
+ * Raw header text
+ */
+header: string; src_line: number; src_count: number; dst_line: number; dst_count: number; lines: WordDiff[][] }
+export type DiffStatus = "Added" | "Removed" | "Unmodified"
 export type File = { 
 /**
  * None if status is addition or unmerged
@@ -121,6 +127,7 @@ score: number | null; src_path: string;
  * Optional destination path if status is copied or renamed
  */
 dst_path: string | null }
+export type FileDiff = DiffHunk[]
 export type FileStatus = 
 /**
  * Addition of a file
@@ -174,6 +181,7 @@ export type Repository = { id: number; name: string; local_path: string; created
  * If both are 0, it's in sync. If None, the tracked upstream is missing.
  */
 export type UpstreamTrack = [number, number] | null
+export type WordDiff = { text: string; status: DiffStatus }
 
 /** tauri-specta globals **/
 
