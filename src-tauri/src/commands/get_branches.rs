@@ -27,7 +27,7 @@ async fn local_branches(app_handle: &tauri::AppHandle) -> CommandResult<Vec<Loca
         .await?;
     branches
         .lines()
-        .map(|line| line.parse().map_err(|_err| CommandError::Parse))
+        .map(|line| line.parse().map_err(CommandError::Parse))
         .collect()
 }
 
@@ -40,7 +40,7 @@ async fn remote_branches(app_handle: &tauri::AppHandle) -> CommandResult<Vec<Rem
         .await?;
     let branches: CommandResult<Vec<RemoteBranch>> = branches
         .lines()
-        .map(|line| line.parse().map_err(|_err| CommandError::Parse))
+        .map(|line| line.parse().map_err(CommandError::Parse))
         .collect();
     Ok(branches?
         .into_iter()

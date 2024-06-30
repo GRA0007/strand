@@ -2,11 +2,10 @@ import { Popover, PopoverTrigger } from '@radix-ui/react-popover'
 import { Select, SelectValue } from '@radix-ui/react-select'
 import { Tooltip, TooltipTrigger } from '@radix-ui/react-tooltip'
 import { useQueryClient } from '@tanstack/react-query'
-import { FilterIcon, PencilIcon, SearchIcon } from 'lucide-react'
+import { FilterIcon, LogsIcon, PencilIcon, SearchIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { events, type GitCommandLog as GitCommandLogType, type GitCommandType, commands } from '../../bindings'
 import { useOpenRepository } from '../../data/useOpenRepository'
-import { LogIcon } from '../../res/LogIcon'
 import { formatDate } from '../../utils/formatDate'
 import { useCommandQuery } from '../../utils/useCommandQuery'
 import { PopoverContent } from '../UI/Popover'
@@ -36,7 +35,6 @@ export const GitCommandLog = () => {
     enabled: Boolean(isOpen && openRepository),
   })
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Refetch when filter changes
   useEffect(() => {
     refetch()
   }, [filter])
@@ -56,7 +54,7 @@ export const GitCommandLog = () => {
         >
           <Tooltip>
             <TooltipTrigger asChild>
-              <LogIcon className="h-8 w-8 p-2 shrink-0" />
+              <LogsIcon className="h-8 w-8 p-2 shrink-0" />
             </TooltipTrigger>
             <TooltipContent>Git command log</TooltipContent>
           </Tooltip>

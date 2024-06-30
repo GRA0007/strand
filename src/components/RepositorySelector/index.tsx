@@ -2,9 +2,11 @@ import { DropdownMenu, DropdownMenuTrigger } from '@radix-ui/react-dropdown-menu
 import { Tooltip, TooltipTrigger } from '@radix-ui/react-tooltip'
 import { useQueryClient } from '@tanstack/react-query'
 import { open } from '@tauri-apps/plugin-dialog'
+import { useSetAtom } from 'jotai'
 import { CheckIcon, ChevronDownIcon, CopyIcon, FolderIcon, PlusIcon } from 'lucide-react'
 import { commands } from '../../bindings'
 import { useOpenRepository } from '../../data/useOpenRepository'
+import { selectedCommitHashAtom } from '../../ui-state'
 import { cn } from '../../utils/cn'
 import { useCommandMutation } from '../../utils/useCommandMutation'
 import { useCommandQuery } from '../../utils/useCommandQuery'
@@ -30,9 +32,14 @@ export const RepositorySelector = () => {
       ]),
   })
 
+  const setSelectedCommitHash = useSetAtom(selectedCommitHashAtom)
+
   const setOpenRepository = useCommandMutation({
     mutationFn: commands.setOpenRepository,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['openRepository'] }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['openRepository'] })
+      setSelectedCommitHash(null)
+    },
   })
 
   return (

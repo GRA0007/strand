@@ -28,6 +28,7 @@ fn main() {
                 commands::get_git_command_log::get_git_command_log,
                 commands::get_graph::get_graph,
                 commands::get_commit_files::get_commit_files,
+                commands::get_file_diff::get_file_diff,
             ))
             .events(collect_events!(GitCommandEvent))
             .config(ExportConfig::new().bigint(specta::ts::BigIntExportBehavior::Number));

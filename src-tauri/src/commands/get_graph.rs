@@ -25,10 +25,11 @@ pub async fn get_graph(app_handle: tauri::AppHandle) -> CommandResult<Vec<Commit
         .arg("--all")
         .run(&app_handle, GitCommandType::Query)
         .await?;
+
     commits
         .trim()
         .trim_end_matches('\x01')
         .split("\x01\n")
-        .map(|line| line.parse().map_err(|_err| CommandError::Parse))
+        .map(|line| line.parse().map_err(CommandError::Parse))
         .collect()
 }

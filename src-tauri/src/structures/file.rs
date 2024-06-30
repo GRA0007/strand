@@ -20,14 +20,18 @@ pub struct File {
 }
 
 impl FromStr for File {
-    type Err = ();
+    type Err = String;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut parts = s.split(' ').skip(2);
 
-        let src_hash = parse_hash(parts.next().ok_or(())?);
-        let dst_hash = parse_hash(parts.next().ok_or(())?);
+        let src_hash = parse_hash(parts.next().ok_or("Failed to get file src hash")?);
+        let dst_hash = parse_hash(parts.next().ok_or("Failed to get file dst hash")?);
 
-        let (status, paths) = parts.next().ok_or(())?.split_once('\x00').ok_or(())?;
+        let (status, paths) = parts
+            .next()
+            .ok_or("Failed to get file status and paths")?
+            .split_once('\x00')
+            .ok_or("Failed to split file status and paths")?;
 
         let (status, score) = status.split_at(1);
 
@@ -39,11 +43,19 @@ impl FromStr for File {
         Ok(Self {
             src_hash,
             dst_hash,
-            status: status.chars().next().ok_or(())?.try_into()?,
+            status: status
+                .chars()
+                .next()
+                .ok_or("Failed to get file status")?
+                .try_into()?,
             score: if score.is_empty() {
                 None
             } else {
-                Some(score.parse().map_err(|_err| ())?)
+                Some(
+                    score
+                        .parse()
+                        .map_err(|err| format!("Failed to parse file score: {}", err))?,
+                )
             },
             src_path,
             dst_path,

@@ -52,7 +52,7 @@ const FolderItem = ({ name, tree, level }: { name: string; tree: Tree; level: nu
     <details open>
       <summary
         className="flex items-center gap-1.5 hover:bg-foreground/10 active:bg-foreground/20 h-6 select-none cursor-default list-none [&::-webkit-details-marker]:hidden pr-1.5"
-        style={{ paddingLeft: `calc(var(--spacing-1_5) + calc(var(--spacing-4) * ${level}))` }}
+        style={{ paddingLeft: `calc(0.375rem + calc(1rem * ${level}))` }}
       >
         <FolderIcon className="h-4 w-4 opacity-60 [details[open]>summary>&]:hidden shrink-0" />
         <FolderOpenIcon className="h-4 w-4 opacity-60 hidden [details[open]>summary>&]:block shrink-0" /> {name}
@@ -66,7 +66,7 @@ const BranchItem = ({ item, level }: { item: Item; level: number }) => {
   return (
     <div
       className="flex items-center gap-1.5 hover:bg-foreground/10 active:bg-foreground/20 h-6 select-none cursor-default pr-1.5 text-ellipsis overflow-hidden whitespace-nowrap"
-      style={{ paddingLeft: `calc(var(--spacing-1_5) + calc(var(--spacing-4) * ${level}))` }}
+      style={{ paddingLeft: `calc(0.375rem + calc(1rem * ${level}))` }}
     >
       <GitBranchIcon className="h-4 w-4 opacity-60 shrink-0" />
       {item.children}
