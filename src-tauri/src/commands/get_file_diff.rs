@@ -15,6 +15,7 @@ pub async fn get_file_diff(
 ) -> CommandResult<FileDiff> {
     let diff = GitCommand::new("diff")
         .arg("--word-diff=porcelain")
+        // .arg("--word-diff-regex=.")
         .arg(format!("{}^", commit_hash.0))
         .arg(commit_hash.0)
         .arg("--")
@@ -22,11 +23,12 @@ pub async fn get_file_diff(
         .run(&app_handle, GitCommandType::Query)
         .await?;
 
+    // Remove diff header
     let diff = diff
         .lines()
         .skip_while(|line| !line.starts_with("@@"))
         .collect::<Vec<_>>()
         .join("\n");
 
-    diff.parse().map_err(|_err| CommandError::Parse)
+    diff.parse().map_err(CommandError::Parse)
 }

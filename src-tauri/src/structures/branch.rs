@@ -23,41 +23,53 @@ pub struct RemoteBranch {
 }
 
 impl FromStr for LocalBranch {
-    type Err = ();
+    type Err = String;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut parts = s.split('\x00');
         Ok(Self {
-            head: parts.next().ok_or(())? == "*",
+            head: parts
+                .next()
+                .ok_or("Failed to get local branch head indicator")?
+                == "*",
             name: parts
                 .next()
-                .ok_or(())?
+                .ok_or("Failed to get local branch name")?
                 .split('/')
                 .map(|s| s.to_owned())
                 .collect(),
             upstream_name: parts
                 .next()
-                .ok_or(())?
+                .ok_or("Failed to get local branch upstream name")?
                 .split('/')
                 .map(|s| s.to_owned())
                 .collect(),
-            upstream_track: parts.next().ok_or(())?.parse().map_err(|_err| ())?,
-            hash: parts.next().ok_or(())?.parse().map_err(|_err| ())?,
+            upstream_track: parts
+                .next()
+                .ok_or("Failed to get local branch upstream track status")?
+                .parse()?,
+            hash: parts
+                .next()
+                .ok_or("Failed to get local branch hash")?
+                .parse()?,
         })
     }
 }
 
 impl FromStr for RemoteBranch {
-    type Err = ();
+    type Err = String;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut parts = s.split('\x00');
         Ok(Self {
             name: parts
                 .next()
-                .ok_or(())?
+                .ok_or("Failed to get remote branch name")?
                 .split('/')
                 .map(|s| s.to_owned())
                 .collect(),
-            hash: parts.next().ok_or(())?.parse().map_err(|_err| ())?,
+            hash: parts
+                .next()
+                .ok_or("Failed to get remote branch hash")?
+                .parse()?,
         })
     }
 }

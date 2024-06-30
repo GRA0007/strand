@@ -101,14 +101,14 @@ gitCommandEvent: "git-command-event"
 /** user-defined types **/
 
 export type Branches = { local: LocalBranch[]; remote: RemoteBranch[] }
-export type CommandError = { Git: GitError } | "Sqlx" | "Parse" | { Other: string }
+export type CommandError = { Git: GitError } | "Sqlx" | { Parse: string } | { Other: string }
 export type Commit = { hash: GitHash; parent_hashes: GitHash[]; author: CommitUser; committer: CommitUser; message: string; description: string | null }
 export type CommitUser = { name: string; email: string; date: string; email_hash: string }
 export type DiffHunk = { 
 /**
  * Raw header text
  */
-header: string; src_line: number; src_count: number; dst_line: number; dst_count: number; lines: WordDiff[][] }
+header: string; lines: LineDiff[] }
 export type DiffStatus = "Added" | "Removed" | "Unmodified"
 export type File = { 
 /**
@@ -166,6 +166,15 @@ export type GitCommandLog = { id: number; command: string; command_type: GitComm
 export type GitCommandType = "Query" | "Mutation"
 export type GitError = "Io" | "Sqlx" | { Unsuccessful: string } | "NoRepoOpen" | "NotARepository"
 export type GitHash = string
+export type LineDiff = { words: WordDiff[]; status: DiffStatus; 
+/**
+ * None if status is Added
+ */
+src_line_number: number | null; 
+/**
+ * None if status is Removed
+ */
+dst_line_number: number | null }
 export type LocalBranch = { head: boolean; 
 /**
  * e.g. `["feat", "implement-stuff"]`

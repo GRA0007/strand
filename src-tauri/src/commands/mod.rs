@@ -24,8 +24,8 @@ pub enum CommandError {
         #[from]
         sqlx::Error,
     ),
-    #[error("failed to parse git output")]
-    Parse,
+    #[error("failed to parse git output: {0}")]
+    Parse(String),
     #[error("{0}")]
     Other(String),
 }
