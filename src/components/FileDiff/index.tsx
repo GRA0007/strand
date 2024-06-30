@@ -1,6 +1,6 @@
 import { useAtom, useAtomValue } from 'jotai'
 import { LoaderCircleIcon, XIcon } from 'lucide-react'
-import { Fragment, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { commands } from '../../bindings'
 import { useOpenRepository } from '../../data/useOpenRepository'
 import { calculateFileId, selectedCommitHashAtom, selectedFileIdAtom } from '../../ui-state'
@@ -8,6 +8,7 @@ import { cn } from '../../utils/cn'
 import { useCommandQuery } from '../../utils/useCommandQuery'
 import { FileName } from '../FileName'
 import { IconButton } from '../UI/IconButton'
+import { Diff } from './Diff'
 
 export const FileDiff = () => {
   const openRepository = useOpenRepository()
@@ -63,61 +64,7 @@ export const FileDiff = () => {
         </div>
       )}
 
-      {diff && (
-        <pre className="flex-1 overflow-auto py-2 text-sm">
-          <code className="w-max min-w-full block">
-            {diff.map((hunk) => (
-              <Fragment key={hunk.header}>
-                <div className="bg-info/30 py-1 px-3 text-foreground/70">{hunk.header}</div>
-                {hunk.lines.map((line, i) => (
-                  <Fragment key={`${hunk.header}-${i}`}>
-                    {line.some((w) => w.status !== 'Added') && (
-                      <div className={cn('px-3', line.some((w) => w.status === 'Removed') && 'bg-error/20')}>
-                        {line.some((w) => w.status === 'Removed') ? '- ' : '  '}
-                        {line
-                          .filter((w) => w.status !== 'Added')
-                          .map((word, j) => (
-                            <span
-                              key={`${hunk.header}-${i}-${j}`}
-                              className={cn(
-                                'inline-block',
-                                word.status === 'Removed' &&
-                                  line.filter((l) => l.text.trim().length > 0).some((l) => l.status === 'Unmodified') &&
-                                  'bg-error/20',
-                              )}
-                            >
-                              {word.text}
-                            </span>
-                          ))}
-                      </div>
-                    )}
-                    {line.some((w) => w.status === 'Added') && (
-                      <div className="px-3 bg-success/20">
-                        +{' '}
-                        {line
-                          .filter((w) => w.status !== 'Removed')
-                          .map((word, j) => (
-                            <span
-                              key={`${hunk.header}-${i}-${j}`}
-                              className={cn(
-                                'inline-block',
-                                word.status === 'Added' &&
-                                  line.filter((l) => l.text.trim().length > 0).some((l) => l.status === 'Unmodified') &&
-                                  'bg-success/20',
-                              )}
-                            >
-                              {word.text}
-                            </span>
-                          ))}
-                      </div>
-                    )}
-                  </Fragment>
-                ))}
-              </Fragment>
-            ))}
-          </code>
-        </pre>
-      )}
+      {diff && <Diff diff={diff} />}
     </div>
   )
 }
