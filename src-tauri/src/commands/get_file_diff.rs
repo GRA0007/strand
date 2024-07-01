@@ -14,8 +14,6 @@ pub async fn get_file_diff(
     path: String,
 ) -> CommandResult<FileDiff> {
     let diff = GitCommand::new("diff")
-        .arg("--word-diff=porcelain")
-        // .arg("--word-diff-regex=.")
         .arg(format!("{}^", commit_hash.0))
         .arg(commit_hash.0)
         .arg("--")

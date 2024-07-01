@@ -48,105 +48,52 @@ impl TryFrom<char> for DiffStatus {
     }
 }
 
-impl FromStr for WordDiff {
-    type Err = String;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let (status, text) = s.split_at(1);
-        let status = status
-            .chars()
-            .next()
-            .ok_or("Diff status char")?
-            .try_into()?;
-        let text = text.into();
-
-        Ok(Self { status, text })
-    }
-}
-
 impl FromStr for DiffHunk {
     type Err = String;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut str_lines = s.lines();
+        let mut lines = s.lines();
 
-        let header: String = str_lines.next().ok_or("Failed to get header")?.into();
+        let header: String = lines.next().ok_or("Failed to get header")?.into();
         let (mut src_line_number, mut dst_line_number) = parse_line_numbers(&header)?;
 
-        // Parse lines
-        let mut lines: Vec<Vec<WordDiff>> = vec![Vec::new()];
-        for line in str_lines {
-            match line {
-                "~" => lines.push(Vec::new()),
-                line => lines
-                    .last_mut()
-                    .ok_or("No preceding tilde")?
-                    .push(line.parse()?),
-            }
-        }
-
         let lines = lines
-            .into_iter()
-            .flat_map(|words| {
-                let (num_added, num_removed) =
-                    words.iter().fold((0, 0), |(a, r), word| match word.status {
-                        DiffStatus::Added => (a + 1, r),
-                        DiffStatus::Removed => (a, r + 1),
-                        DiffStatus::Unmodified => (a, r),
-                    });
+            .map(|line| {
+                let (status, text) = line.split_at(1);
 
-                let mut lines = Vec::new();
+                let status: DiffStatus = status
+                    .chars()
+                    .next()
+                    .ok_or("Diff status char")?
+                    .try_into()?;
 
-                // Context line or empty line
-                if num_added == 0 && num_removed == 0 {
-                    lines.push(LineDiff {
-                        words: words.clone(),
+                let line = LineDiff {
+                    words: vec![WordDiff {
                         status: DiffStatus::Unmodified,
-                        src_line_number: Some(src_line_number),
-                        dst_line_number: Some(dst_line_number),
-                    });
-                    src_line_number += 1;
-                    dst_line_number += 1;
-                }
+                        text: text.into(),
+                    }],
+                    status: status.clone(),
+                    src_line_number: match status {
+                        DiffStatus::Added => None,
+                        _ => Some(src_line_number),
+                    },
+                    dst_line_number: match status {
+                        DiffStatus::Removed => None,
+                        _ => Some(dst_line_number),
+                    },
+                };
 
-                // Removed line
-                if num_removed > 0 {
-                    let removed_words: Vec<_> = words
-                        .clone()
-                        .into_iter()
-                        .filter(|word| !matches!(word.status, DiffStatus::Added))
-                        .collect();
-
-                    if !removed_words.is_empty() {
-                        lines.push(LineDiff {
-                            words: removed_words,
-                            status: DiffStatus::Removed,
-                            src_line_number: Some(src_line_number),
-                            dst_line_number: None,
-                        });
+                match status {
+                    DiffStatus::Added => dst_line_number += 1,
+                    DiffStatus::Removed => src_line_number += 1,
+                    DiffStatus::Unmodified => {
                         src_line_number += 1;
-                    }
-                }
-
-                // Added line
-                if num_added > 0 || num_removed > 0 {
-                    let added_words: Vec<_> = words
-                        .into_iter()
-                        .filter(|word| !matches!(word.status, DiffStatus::Removed))
-                        .collect();
-
-                    if !added_words.is_empty() {
-                        lines.push(LineDiff {
-                            words: added_words,
-                            status: DiffStatus::Added,
-                            src_line_number: None,
-                            dst_line_number: Some(dst_line_number),
-                        });
                         dst_line_number += 1;
                     }
-                }
+                };
 
-                lines
+                Ok(line)
             })
-            .collect();
+            .collect::<Result<Vec<_>, String>>()?;
 
         Ok(Self { header, lines })
     }
