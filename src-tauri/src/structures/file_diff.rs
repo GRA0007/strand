@@ -1,4 +1,4 @@
-use std::str::{FromStr, Lines};
+use std::str::{FromStr, Split};
 
 use serde::Serialize;
 use similar::{utils::TextDiffRemapper, ChangeTag, TextDiff};
@@ -27,6 +27,7 @@ pub struct LineDiff {
     pub dst_line_number: Option<usize>,
 }
 
+#[derive(Debug)]
 enum HunkSegment {
     Unmodified(String),
     Added(String),
@@ -80,7 +81,7 @@ impl HunkSegment {
 impl FromStr for DiffHunk {
     type Err = String;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut lines = s.lines();
+        let mut lines = s.split('\n');
 
         let header: String = lines.next().ok_or("Failed to get header")?.into();
         let (mut src_line_number, mut dst_line_number) = parse_line_numbers(&header)?;
@@ -93,7 +94,7 @@ impl FromStr for DiffHunk {
             .into_iter()
             .flat_map(|segment| match segment {
                 HunkSegment::Unmodified(text) => text
-                    .lines()
+                    .split('\n')
                     .map(|line| {
                         let line = LineDiff {
                             words: vec![WordDiff {
@@ -110,7 +111,7 @@ impl FromStr for DiffHunk {
                     })
                     .collect::<Vec<_>>(),
                 HunkSegment::Added(text) => text
-                    .lines()
+                    .split('\n')
                     .map(|line| {
                         let line = LineDiff {
                             words: vec![WordDiff {
@@ -126,7 +127,7 @@ impl FromStr for DiffHunk {
                     })
                     .collect(),
                 HunkSegment::Removed(text) => text
-                    .lines()
+                    .split('\n')
                     .map(|line| {
                         let line = LineDiff {
                             words: vec![WordDiff {
@@ -158,7 +159,6 @@ impl FromStr for DiffHunk {
                             })
                         })
                         .collect();
-                    dbg!(diff.clone());
 
                     let mut lines = Vec::new();
 
@@ -262,7 +262,7 @@ fn parse_line_numbers(header: &str) -> Result<(usize, usize), String> {
 }
 
 #[rustfmt::skip]
-fn group_diff_into_segments(lines: Lines) -> Result<Vec<HunkSegment>, String> {
+fn group_diff_into_segments(lines: Split<char>) -> Result<Vec<HunkSegment>, String> {
     let mut segments: Vec<HunkSegment> = Vec::new();
     for line in lines {
         let (status, text) = line.split_at(1);
