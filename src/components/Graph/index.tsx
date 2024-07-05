@@ -34,6 +34,7 @@ export const Graph = () => {
     }
   }, [commits, selectedHash, setSelectedHash])
 
+  // TODO: Move this somewhere more central
   const handleKeyDown = (e: KeyboardEvent) => {
     if (
       (e.target instanceof HTMLElement &&
