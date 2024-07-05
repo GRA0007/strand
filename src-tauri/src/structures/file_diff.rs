@@ -32,6 +32,7 @@ enum HunkSegment {
     Unmodified(String),
     Added(String),
     Removed(String),
+    /// Word diffs only need to be calculated for this variant
     RemovedAdded(String, String),
 }
 
@@ -89,6 +90,7 @@ impl FromStr for DiffHunk {
         // Group diffs into hunk "segments"
         let segments = group_diff_into_segments(lines)?;
 
+        // TODO: Reduce duplication of this match
         // Calculate word diffs and turn segments back into lines
         let lines = segments
             .into_iter()
@@ -144,9 +146,9 @@ impl FromStr for DiffHunk {
                     .collect(),
                 HunkSegment::RemovedAdded(removed, added) => {
                     // Calculate word diff
-                    let tokenized_removed = tokenize(&removed);
-                    let tokenized_added = tokenize(&added);
-                    let diff = TextDiff::from_slices(&tokenized_removed, &tokenized_added);
+                    let old_tokenized = tokenize_code(&removed);
+                    let new_tokenized = tokenize_code(&added);
+                    let diff = TextDiff::from_slices(&old_tokenized, &new_tokenized);
                     let remapper = TextDiffRemapper::from_text_diff(&diff, &removed, &added);
                     let diff: Vec<_> = diff
                         .ops()
@@ -299,16 +301,16 @@ fn group_diff_into_segments(lines: Split<char>) -> Result<Vec<HunkSegment>, Stri
     Ok(segments)
 }
 
-fn tokenize(s: &str) -> Vec<&str> {
+/// Tokenize into chars, but keep runs of ascii letters and numbers in single tokens
+fn tokenize_code(s: &str) -> Vec<&str> {
     let mut rv = vec![];
     let mut iter = s.char_indices().peekable();
 
     while let Some((idx, c)) = iter.next() {
-        let is_alphanumeric = !c.is_alphanumeric();
         let start = idx;
         let mut end = idx + c.len_utf8();
         while let Some(&(_, next_char)) = iter.peek() {
-            if next_char.is_alphanumeric() == is_alphanumeric {
+            if !next_char.is_ascii_alphanumeric() || !c.is_ascii_alphanumeric() {
                 break;
             }
             iter.next();
