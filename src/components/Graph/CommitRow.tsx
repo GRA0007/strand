@@ -17,11 +17,13 @@ export const CommitRow = ({
       >
         <div
           className={cn(
-            'flex items-center h-6 rounded-l-full flex-1',
-            isSelected ? 'bg-orange-900' : 'group-hover/commit-row:bg-orange-900/20',
+            'flex items-center h-6 rounded-l-full flex-1 min-w-0',
+            isSelected
+              ? 'bg-orange-300 dark:bg-orange-900'
+              : 'group-hover/commit-row:bg-orange-300/20 dark:group-hover/commit-row:bg-orange-900/20',
           )}
         >
-          <AvatarStack className="h-6 w-6 border-2 border-orange-700">
+          <AvatarStack className="h-6 w-6 shrink-0 border-2 border-orange-400 dark:border-orange-700">
             <Avatar
               emailHash={commit.author.email_hash}
               name={commit.author.name}
@@ -39,9 +41,9 @@ export const CommitRow = ({
             )}
           </AvatarStack>
 
-          <div className="whitespace-nowrap text-xs text-ellipsis overflow-hidden pl-3">
+          <div className="whitespace-nowrap text-xs pl-3 flex-1 min-w-0 text-ellipsis overflow-hidden">
             <span className={cn(isSelected && 'font-semibold')}>{commit.message}</span>
-            {commit.description && <span className="text-foreground/50 ml-2">{commit.description}</span>}
+            {commit.description && <span className="opacity-50 ml-2">{commit.description}</span>}
           </div>
         </div>
       </div>

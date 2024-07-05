@@ -9,25 +9,17 @@ use tokio::process::Command;
 
 use crate::db::{Db, GitCommandLog, GitCommandType};
 
-#[derive(Error, Debug, Type)]
+#[derive(Error, Debug)]
 pub enum GitError {
     #[error(transparent)]
-    Io(
-        #[serde(skip)]
-        #[from]
-        io::Error,
-    ),
+    Io(#[from] io::Error),
     #[error(transparent)]
-    Sqlx(
-        #[serde(skip)]
-        #[from]
-        sqlx::Error,
-    ),
-    #[error("git command returned an error: {0}")]
+    Sqlx(#[from] sqlx::Error),
+    #[error("Git command returned an error: {0}")]
     Unsuccessful(String),
-    #[error("no repository open")]
+    #[error("No repository open")]
     NoRepoOpen,
-    #[error("not a valid repository")]
+    #[error("Not a valid repository")]
     NotARepository,
 }
 

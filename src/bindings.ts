@@ -4,7 +4,7 @@
          /** user-defined commands **/
 
          export const commands = {
-async getBranches() : Promise<Result<Branches, CommandError>> {
+async getBranches() : Promise<Result<Branches, string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("get_branches") };
 } catch (e) {
@@ -12,7 +12,7 @@ try {
     else return { status: "error", error: e  as any };
 }
 },
-async addRepositoryFromPath(localPath: string) : Promise<Result<null, CommandError>> {
+async addRepositoryFromPath(localPath: string) : Promise<Result<null, string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("add_repository_from_path", { localPath }) };
 } catch (e) {
@@ -20,7 +20,7 @@ try {
     else return { status: "error", error: e  as any };
 }
 },
-async setOpenRepository(id: number | null) : Promise<Result<null, CommandError>> {
+async setOpenRepository(id: number | null) : Promise<Result<null, string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("set_open_repository", { id }) };
 } catch (e) {
@@ -28,7 +28,7 @@ try {
     else return { status: "error", error: e  as any };
 }
 },
-async getOpenRepository() : Promise<Result<Repository | null, CommandError>> {
+async getOpenRepository() : Promise<Result<Repository | null, string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("get_open_repository") };
 } catch (e) {
@@ -36,7 +36,7 @@ try {
     else return { status: "error", error: e  as any };
 }
 },
-async getRepositories() : Promise<Result<Repository[], CommandError>> {
+async getRepositories() : Promise<Result<Repository[], string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("get_repositories") };
 } catch (e) {
@@ -44,7 +44,7 @@ try {
     else return { status: "error", error: e  as any };
 }
 },
-async gitFetch() : Promise<Result<null, CommandError>> {
+async gitFetch() : Promise<Result<null, string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("git_fetch") };
 } catch (e) {
@@ -52,7 +52,7 @@ try {
     else return { status: "error", error: e  as any };
 }
 },
-async getGitCommandLog(filter: GitCommandType | null) : Promise<Result<GitCommandLog[], CommandError>> {
+async getGitCommandLog(filter: GitCommandType | null) : Promise<Result<GitCommandLog[], string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("get_git_command_log", { filter }) };
 } catch (e) {
@@ -60,7 +60,7 @@ try {
     else return { status: "error", error: e  as any };
 }
 },
-async getGraph() : Promise<Result<Commit[], CommandError>> {
+async getGraph() : Promise<Result<Commit[], string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("get_graph") };
 } catch (e) {
@@ -68,9 +68,17 @@ try {
     else return { status: "error", error: e  as any };
 }
 },
-async getCommitFiles(commitHash: GitHash) : Promise<Result<File[], CommandError>> {
+async getCommitFiles(commitHash: GitHash) : Promise<Result<File[], string>> {
 try {
     return { status: "ok", data: await TAURI_INVOKE("get_commit_files", { commitHash }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async getFileDiff(commitHash: GitHash, path: string) : Promise<Result<FileDiff, string>> {
+try {
+    return { status: "ok", data: await TAURI_INVOKE("get_file_diff", { commitHash, path }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -93,9 +101,14 @@ gitCommandEvent: "git-command-event"
 /** user-defined types **/
 
 export type Branches = { local: LocalBranch[]; remote: RemoteBranch[] }
-export type CommandError = { Git: GitError } | "Sqlx" | "Parse" | { Other: string }
 export type Commit = { hash: GitHash; parent_hashes: GitHash[]; author: CommitUser; committer: CommitUser; message: string; description: string | null }
 export type CommitUser = { name: string; email: string; date: string; email_hash: string }
+export type DiffHunk = { 
+/**
+ * Raw header text
+ */
+header: string; lines: LineDiff[] }
+export type DiffStatus = "Added" | "Removed" | "Unmodified"
 export type File = { 
 /**
  * None if status is addition or unmerged
@@ -113,6 +126,7 @@ score: number | null; src_path: string;
  * Optional destination path if status is copied or renamed
  */
 dst_path: string | null }
+export type FileDiff = DiffHunk[]
 export type FileStatus = 
 /**
  * Addition of a file
@@ -149,8 +163,16 @@ export type FileStatus =
 export type GitCommandEvent = GitCommandLog
 export type GitCommandLog = { id: number; command: string; command_type: GitCommandType; created_at: string }
 export type GitCommandType = "Query" | "Mutation"
-export type GitError = "Io" | "Sqlx" | { Unsuccessful: string } | "NoRepoOpen" | "NotARepository"
 export type GitHash = string
+export type LineDiff = { words: WordDiff[]; status: DiffStatus; 
+/**
+ * None if status is Added
+ */
+src_line_number: number | null; 
+/**
+ * None if status is Removed
+ */
+dst_line_number: number | null }
 export type LocalBranch = { head: boolean; 
 /**
  * e.g. `["feat", "implement-stuff"]`
@@ -166,6 +188,7 @@ export type Repository = { id: number; name: string; local_path: string; created
  * If both are 0, it's in sync. If None, the tracked upstream is missing.
  */
 export type UpstreamTrack = [number, number] | null
+export type WordDiff = { text: string; status: DiffStatus }
 
 /** tauri-specta globals **/
 

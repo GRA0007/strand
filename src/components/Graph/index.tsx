@@ -1,8 +1,8 @@
-import { useAtom } from 'jotai'
+import { useAtom, useSetAtom } from 'jotai'
 import { useEffect } from 'react'
 import { commands } from '../../bindings'
 import { useOpenRepository } from '../../data/useOpenRepository'
-import { selectedCommitHashAtom } from '../../ui-state'
+import { selectedCommitHashAtom, selectedFileIdAtom } from '../../ui-state'
 import { useCommandQuery } from '../../utils/useCommandQuery'
 import { CommitRow } from './CommitRow'
 
@@ -16,7 +16,16 @@ export const Graph = () => {
     refetchOnWindowFocus: true,
   })
 
-  const [selectedHash, setSelectedHash] = useAtom(selectedCommitHashAtom)
+  const [selectedHash, _setSelectedHash] = useAtom(selectedCommitHashAtom)
+  const setSelectedFileId = useSetAtom(selectedFileIdAtom)
+  const setSelectedHash = (hash: string | null) => {
+    _setSelectedHash((h) => {
+      if (h !== hash) {
+        setSelectedFileId(null)
+      }
+      return hash
+    })
+  }
 
   // Select the most recent commit if none selected
   useEffect(() => {
@@ -25,6 +34,7 @@ export const Graph = () => {
     }
   }, [commits, selectedHash, setSelectedHash])
 
+  // TODO: Move this somewhere more central
   const handleKeyDown = (e: KeyboardEvent) => {
     if (
       (e.target instanceof HTMLElement &&
@@ -58,7 +68,6 @@ export const Graph = () => {
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-    // biome-ignore lint/correctness/useExhaustiveDependencies: react compiler
   }, [handleKeyDown])
 
   return (

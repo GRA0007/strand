@@ -29,7 +29,7 @@ impl From<FileStatus> for char {
 }
 
 impl TryFrom<char> for FileStatus {
-    type Error = ();
+    type Error = String;
     fn try_from(value: char) -> Result<Self, Self::Error> {
         match value {
             'A' => Ok(Self::Added),
@@ -40,7 +40,7 @@ impl TryFrom<char> for FileStatus {
             'T' => Ok(Self::TypeChanged),
             'U' => Ok(Self::Unmerged),
             'X' => Ok(Self::Unknown),
-            _ => Err(()),
+            status => Err(format!("Invalid file status: {status}")),
         }
     }
 }

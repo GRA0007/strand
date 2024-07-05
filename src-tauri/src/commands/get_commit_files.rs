@@ -24,12 +24,12 @@ pub async fn get_commit_files(
 
     let files = files
         .strip_prefix(':')
-        .ok_or(CommandError::Parse)?
+        .ok_or(CommandError::Parse("Failed to strip files prefix".into()))?
         .strip_suffix('\x00')
-        .ok_or(CommandError::Parse)?
+        .ok_or(CommandError::Parse("Failed to strip files suffix".into()))?
         .split("\x00:");
 
     files
-        .map(|line| line.parse().map_err(|_err| CommandError::Parse))
+        .map(|line| line.parse().map_err(CommandError::Parse))
         .collect()
 }
