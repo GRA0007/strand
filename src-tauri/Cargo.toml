@@ -1,6 +1,6 @@
 [package]
 name = "strand"
-version = "0.4.0"
+version = "0.5.0"
 description = "A strand-like git GUI"
 authors = ["Benji Grant"]
 edition = "2021"

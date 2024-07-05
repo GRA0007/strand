@@ -1,5 +1,16 @@
 # Changelog
 
+## \[0.5.0]
+
+### New Features
+
+- [`461d2cc`](https://www.github.com/GRA0007/strand/commit/461d2cc8948d14717908c0223bd1fd7ff2febe15) Add file diff viewer
+
+### Bug Fixes
+
+- [`74a9ffc`](https://www.github.com/GRA0007/strand/commit/74a9ffc6ddc106dba5f655aab3d03626279d54ea) Limit initials of a user avatar to 2 and correctly parse emojis and other unicode characters
+- [`8917470`](https://www.github.com/GRA0007/strand/commit/8917470fb63ad83d6710f9fa462cb222fa119972) Show toasts when an error occurs in a query or mutation
+
 ## \[0.4.0]
 
 ### New Features
