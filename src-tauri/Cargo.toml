@@ -24,6 +24,7 @@ chrono = { version = "0.4.38", features = ["serde"] }
 thiserror = "1.0.61"
 sha2 = "0.10.8"
 similar = "2.5.0"
+syntect = "5.2.0"
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!

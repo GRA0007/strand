@@ -160,11 +160,14 @@ export type FileStatus =
  * "Unknown" change type
  */
 "Unknown"
+export type Fragment = { text: string; status: DiffStatus; style: FragmentStyle | null }
+export type FragmentFontStyle = { bold: boolean; italic: boolean; underline: boolean }
+export type FragmentStyle = { foreground: [number, number, number, number]; background: [number, number, number, number]; font_style: FragmentFontStyle }
 export type GitCommandEvent = GitCommandLog
 export type GitCommandLog = { id: number; command: string; command_type: GitCommandType; created_at: string }
 export type GitCommandType = "Query" | "Mutation"
 export type GitHash = string
-export type LineDiff = { words: WordDiff[]; status: DiffStatus; 
+export type LineDiff = { fragments: Fragment[]; status: DiffStatus; 
 /**
  * None if status is Added
  */
@@ -188,7 +191,6 @@ export type Repository = { id: number; name: string; local_path: string; created
  * If both are 0, it's in sync. If None, the tracked upstream is missing.
  */
 export type UpstreamTrack = [number, number] | null
-export type WordDiff = { text: string; status: DiffStatus }
 
 /** tauri-specta globals **/
 

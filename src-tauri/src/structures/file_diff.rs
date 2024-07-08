@@ -1,8 +1,16 @@
-use std::str::{FromStr, Split};
+use std::{
+    str::{FromStr, Lines},
+    sync::OnceLock,
+};
 
 use serde::Serialize;
 use similar::{utils::TextDiffRemapper, ChangeTag, TextDiff};
 use specta::Type;
+use syntect::{
+    easy::HighlightLines,
+    highlighting::{FontStyle, Style, ThemeSet},
+    parsing::SyntaxSet,
+};
 
 #[derive(Debug, Serialize, Type, Clone)]
 pub enum DiffStatus {
@@ -12,14 +20,53 @@ pub enum DiffStatus {
 }
 
 #[derive(Debug, Serialize, Type, Clone)]
-pub struct WordDiff {
+pub struct FragmentFontStyle {
+    pub bold: bool,
+    pub italic: bool,
+    pub underline: bool,
+}
+
+#[derive(Debug, Serialize, Type, Clone)]
+pub struct FragmentStyle {
+    pub foreground: (u8, u8, u8, u8),
+    pub background: (u8, u8, u8, u8),
+    pub font_style: FragmentFontStyle,
+}
+
+impl From<Style> for FragmentStyle {
+    fn from(value: Style) -> Self {
+        Self {
+            foreground: (
+                value.foreground.r,
+                value.foreground.g,
+                value.foreground.b,
+                value.foreground.a,
+            ),
+            background: (
+                value.background.r,
+                value.background.g,
+                value.background.b,
+                value.background.a,
+            ),
+            font_style: FragmentFontStyle {
+                bold: value.font_style.contains(FontStyle::BOLD),
+                italic: value.font_style.contains(FontStyle::ITALIC),
+                underline: value.font_style.contains(FontStyle::UNDERLINE),
+            },
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Type, Clone)]
+pub struct Fragment {
     pub text: String,
     pub status: DiffStatus,
+    pub style: Option<FragmentStyle>,
 }
 
 #[derive(Debug, Serialize, Type)]
 pub struct LineDiff {
-    pub words: Vec<WordDiff>,
+    pub fragments: Vec<Fragment>,
     pub status: DiffStatus,
     /// None if status is Added
     pub src_line_number: Option<usize>,
@@ -79,12 +126,11 @@ impl HunkSegment {
     }
 }
 
-impl FromStr for DiffHunk {
-    type Err = String;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut lines = s.split('\n');
+impl DiffHunk {
+    fn from(s: &str, extension: &str) -> Result<Self, String> {
+        let mut lines = s.lines();
 
-        let header: String = lines.next().ok_or("Failed to get header")?.into();
+        let header: String = format!("@@{}", lines.next().ok_or("Failed to get header")?);
         let (mut src_line_number, mut dst_line_number) = parse_line_numbers(&header)?;
 
         // Group diffs into hunk "segments"
@@ -92,16 +138,17 @@ impl FromStr for DiffHunk {
 
         // TODO: Reduce duplication of this match
         // Calculate word diffs and turn segments back into lines
-        let lines = segments
+        let mut lines: Vec<LineDiff> = segments
             .into_iter()
             .flat_map(|segment| match segment {
                 HunkSegment::Unmodified(text) => text
                     .split('\n')
                     .map(|line| {
                         let line = LineDiff {
-                            words: vec![WordDiff {
+                            fragments: vec![Fragment {
                                 text: line.into(),
                                 status: DiffStatus::Unmodified,
+                                style: None,
                             }],
                             status: DiffStatus::Unmodified,
                             src_line_number: Some(src_line_number),
@@ -116,9 +163,10 @@ impl FromStr for DiffHunk {
                     .split('\n')
                     .map(|line| {
                         let line = LineDiff {
-                            words: vec![WordDiff {
+                            fragments: vec![Fragment {
                                 text: line.into(),
                                 status: DiffStatus::Unmodified,
+                                style: None,
                             }],
                             status: DiffStatus::Added,
                             src_line_number: None,
@@ -132,9 +180,10 @@ impl FromStr for DiffHunk {
                     .split('\n')
                     .map(|line| {
                         let line = LineDiff {
-                            words: vec![WordDiff {
+                            fragments: vec![Fragment {
                                 text: line.into(),
                                 status: DiffStatus::Unmodified,
+                                style: None,
                             }],
                             status: DiffStatus::Removed,
                             src_line_number: Some(src_line_number),
@@ -155,28 +204,30 @@ impl FromStr for DiffHunk {
                         .iter()
                         .flat_map(move |x| remapper.iter_slices(x))
                         .flat_map(|(tag, value)| {
-                            value.split_inclusive('\n').map(move |text| WordDiff {
+                            value.split_inclusive('\n').map(move |text| Fragment {
                                 text: text.into(),
                                 status: tag.into(),
+                                style: None,
                             })
                         })
                         .collect();
 
                     let mut lines = Vec::new();
 
-                    let mut current_line: Vec<WordDiff> = Vec::new();
+                    let mut current_line: Vec<Fragment> = Vec::new();
                     let removed_words: Vec<_> = diff
                         .iter()
                         .filter(|word| !matches!(word.status, DiffStatus::Added))
                         .collect();
                     for (i, word) in removed_words.iter().enumerate() {
-                        current_line.push(WordDiff {
+                        current_line.push(Fragment {
                             text: word.text.trim_end_matches('\n').into(),
                             status: word.status.clone(),
+                            style: None,
                         });
                         if word.text.ends_with('\n') || i == removed_words.len() - 1 {
                             lines.push(LineDiff {
-                                words: current_line.to_vec(),
+                                fragments: current_line.to_vec(),
                                 status: DiffStatus::Removed,
                                 src_line_number: Some(src_line_number),
                                 dst_line_number: None,
@@ -191,13 +242,14 @@ impl FromStr for DiffHunk {
                         .filter(|word| !matches!(word.status, DiffStatus::Removed))
                         .collect();
                     for (i, word) in added_words.iter().enumerate() {
-                        current_line.push(WordDiff {
+                        current_line.push(Fragment {
                             text: word.text.trim_end_matches('\n').into(),
                             status: word.status.clone(),
+                            style: None,
                         });
                         if word.text.ends_with('\n') || i == added_words.len() - 1 {
                             lines.push(LineDiff {
-                                words: current_line.to_vec(),
+                                fragments: current_line.to_vec(),
                                 status: DiffStatus::Added,
                                 src_line_number: None,
                                 dst_line_number: Some(dst_line_number),
@@ -212,6 +264,9 @@ impl FromStr for DiffHunk {
             })
             .collect();
 
+        // Highlight lines
+        lines.iter_mut().for_each(|line| line.highlight(extension));
+
         Ok(Self { header, lines })
     }
 }
@@ -219,20 +274,64 @@ impl FromStr for DiffHunk {
 impl FromStr for FileDiff {
     type Err = String;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let hunks = s
-            .split("\n@@")
-            .enumerate()
-            .map(|(i, hunk)| {
-                if i == 0 {
-                    hunk.into()
-                } else {
-                    format!("@@{hunk}")
-                }
-            })
-            .map(|hunk| hunk.parse())
+        let mut sections = s.split("\n@@");
+        let diff_header = sections.next().ok_or("Failed to get diff header")?;
+        // TODO: This method of extracting the filename is possibly quite flaky
+        let (removed_filename, added_filename) = diff_header
+            .split_once("--- ")
+            .ok_or("Failed to extract file names")?
+            .1
+            .split_once("\n+++ ")
+            .ok_or("Failed to split file names")?;
+        let extension = if added_filename == "/dev/null" {
+            removed_filename
+        } else {
+            added_filename
+        }
+        .rsplit_once('.')
+        .ok_or("Failed to get file extension")?
+        .1;
+
+        let hunks = sections
+            .map(|hunk| DiffHunk::from(hunk, extension))
             .collect::<Result<_, _>>()?;
 
         Ok(Self(hunks))
+    }
+}
+
+static PS: OnceLock<SyntaxSet> = OnceLock::new();
+static TS: OnceLock<ThemeSet> = OnceLock::new();
+
+impl LineDiff {
+    fn highlight(&mut self, extension: &str) {
+        let line = self
+            .fragments
+            .iter()
+            .map(|f| f.text.as_str())
+            .collect::<Vec<_>>()
+            .join("");
+
+        let ps = PS.get_or_init(|| SyntaxSet::load_defaults_newlines());
+        let ts = TS.get_or_init(|| ThemeSet::load_defaults());
+
+        // TODO: don't load themes/syntax for every line
+        let syntax = ps
+            .find_syntax_by_extension(extension)
+            .unwrap_or_else(|| ps.find_syntax_plain_text());
+        let mut h = HighlightLines::new(syntax, &ts.themes["base16-ocean.light"]);
+        self.fragments = h
+            .highlight_line(&line, &ps)
+            .expect("Failed to highlight line")
+            .into_iter()
+            .flat_map(|(style, text)| {
+                vec![Fragment {
+                    text: text.into(),
+                    status: DiffStatus::Unmodified,
+                    style: Some(style.into()),
+                }]
+            })
+            .collect();
     }
 }
 
@@ -264,10 +363,10 @@ fn parse_line_numbers(header: &str) -> Result<(usize, usize), String> {
 }
 
 #[rustfmt::skip]
-fn group_diff_into_segments(lines: Split<char>) -> Result<Vec<HunkSegment>, String> {
+fn group_diff_into_segments(lines: Lines) -> Result<Vec<HunkSegment>, String> {
     let mut segments: Vec<HunkSegment> = Vec::new();
     for line in lines {
-        let (status, text) = line.split_at(1);
+        let (status, text) = if line.is_empty() { (" ", "") } else { line.split_at(1) };
 
         let status: DiffStatus = status
             .chars()

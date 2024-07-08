@@ -20,17 +20,26 @@ export const Diff = ({ diff }: { diff: FileDiff }) => {
 }
 
 const DiffLine = ({ line, id }: { line: LineDiff; id: string }) => {
-  const numUnmodified = line.words.filter((word) => word.status === 'Unmodified' && word.text.trim().length > 0).length
+  const numUnmodified = line.fragments.filter(
+    (word) => word.status === 'Unmodified' && word.text.trim().length > 0,
+  ).length
 
   return (
     <Line srcLineNumber={line.src_line_number} dstLineNumber={line.dst_line_number} status={line.status}>
-      {line.words.map((word, i) => (
+      {line.fragments.map((word, i) => (
         <DiffWord
           key={`${id}-${i}`}
           className={cn(
             word.status === 'Removed' && numUnmodified > 0 && 'bg-error/20',
             word.status === 'Added' && numUnmodified > 0 && 'bg-success/20',
+            word.style?.font_style.bold && 'font-bold',
+            word.style?.font_style.italic && 'italic',
+            word.style?.font_style.underline && 'underline',
           )}
+          style={{
+            color: `rgb(${word.style?.foreground[0]} ${word.style?.foreground[1]} ${word.style?.foreground[2]} / ${word.style?.foreground[3]})`,
+            background: `rgb(${word.style?.background[0]} ${word.style?.background[1]} ${word.style?.background[2]} / ${word.style?.background[3]})`,
+          }}
         >
           {word.text}
         </DiffWord>
@@ -68,6 +77,14 @@ const Line = ({
   )
 }
 
-const DiffWord = ({ children, className }: { children: React.ReactNode; className?: string }) => {
-  return <span className={cn('inline-block', className)}>{children}</span>
+const DiffWord = ({
+  children,
+  className,
+  style,
+}: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) => {
+  return (
+    <span className={cn('inline-block', className)} style={style}>
+      {children}
+    </span>
+  )
 }
