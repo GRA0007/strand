@@ -160,9 +160,7 @@ export type FileStatus =
  * "Unknown" change type
  */
 "Unknown"
-export type Fragment = { text: string; status: DiffStatus; style: FragmentStyle | null }
-export type FragmentFontStyle = { bold: boolean; italic: boolean; underline: boolean }
-export type FragmentStyle = { foreground: [number, number, number, number]; background: [number, number, number, number]; font_style: FragmentFontStyle }
+export type Fragment = { text: string; status: DiffStatus; class: string[] | null }
 export type GitCommandEvent = GitCommandLog
 export type GitCommandLog = { id: number; command: string; command_type: GitCommandType; created_at: string }
 export type GitCommandType = "Query" | "Mutation"

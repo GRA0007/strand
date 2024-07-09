@@ -6,11 +6,7 @@ use std::{
 use serde::Serialize;
 use similar::{utils::TextDiffRemapper, ChangeTag, TextDiff};
 use specta::Type;
-use syntect::{
-    easy::HighlightLines,
-    highlighting::{FontStyle, Style, ThemeSet},
-    parsing::SyntaxSet,
-};
+use tree_sitter_highlight::{HighlightConfiguration, HighlightEvent, Highlighter};
 
 #[derive(Debug, Serialize, Type, Clone)]
 pub enum DiffStatus {
@@ -20,48 +16,10 @@ pub enum DiffStatus {
 }
 
 #[derive(Debug, Serialize, Type, Clone)]
-pub struct FragmentFontStyle {
-    pub bold: bool,
-    pub italic: bool,
-    pub underline: bool,
-}
-
-#[derive(Debug, Serialize, Type, Clone)]
-pub struct FragmentStyle {
-    pub foreground: (u8, u8, u8, u8),
-    pub background: (u8, u8, u8, u8),
-    pub font_style: FragmentFontStyle,
-}
-
-impl From<Style> for FragmentStyle {
-    fn from(value: Style) -> Self {
-        Self {
-            foreground: (
-                value.foreground.r,
-                value.foreground.g,
-                value.foreground.b,
-                value.foreground.a,
-            ),
-            background: (
-                value.background.r,
-                value.background.g,
-                value.background.b,
-                value.background.a,
-            ),
-            font_style: FragmentFontStyle {
-                bold: value.font_style.contains(FontStyle::BOLD),
-                italic: value.font_style.contains(FontStyle::ITALIC),
-                underline: value.font_style.contains(FontStyle::UNDERLINE),
-            },
-        }
-    }
-}
-
-#[derive(Debug, Serialize, Type, Clone)]
 pub struct Fragment {
     pub text: String,
     pub status: DiffStatus,
-    pub style: Option<FragmentStyle>,
+    pub class: Option<Vec<String>>,
 }
 
 #[derive(Debug, Serialize, Type)]
@@ -148,7 +106,7 @@ impl DiffHunk {
                             fragments: vec![Fragment {
                                 text: line.into(),
                                 status: DiffStatus::Unmodified,
-                                style: None,
+                                class: None,
                             }],
                             status: DiffStatus::Unmodified,
                             src_line_number: Some(src_line_number),
@@ -166,7 +124,7 @@ impl DiffHunk {
                             fragments: vec![Fragment {
                                 text: line.into(),
                                 status: DiffStatus::Unmodified,
-                                style: None,
+                                class: None,
                             }],
                             status: DiffStatus::Added,
                             src_line_number: None,
@@ -183,7 +141,7 @@ impl DiffHunk {
                             fragments: vec![Fragment {
                                 text: line.into(),
                                 status: DiffStatus::Unmodified,
-                                style: None,
+                                class: None,
                             }],
                             status: DiffStatus::Removed,
                             src_line_number: Some(src_line_number),
@@ -207,7 +165,7 @@ impl DiffHunk {
                             value.split_inclusive('\n').map(move |text| Fragment {
                                 text: text.into(),
                                 status: tag.into(),
-                                style: None,
+                                class: None,
                             })
                         })
                         .collect();
@@ -223,7 +181,7 @@ impl DiffHunk {
                         current_line.push(Fragment {
                             text: word.text.trim_end_matches('\n').into(),
                             status: word.status.clone(),
-                            style: None,
+                            class: None,
                         });
                         if word.text.ends_with('\n') || i == removed_words.len() - 1 {
                             lines.push(LineDiff {
@@ -245,7 +203,7 @@ impl DiffHunk {
                         current_line.push(Fragment {
                             text: word.text.trim_end_matches('\n').into(),
                             status: word.status.clone(),
-                            style: None,
+                            class: None,
                         });
                         if word.text.ends_with('\n') || i == added_words.len() - 1 {
                             lines.push(LineDiff {
@@ -300,8 +258,98 @@ impl FromStr for FileDiff {
     }
 }
 
-static PS: OnceLock<SyntaxSet> = OnceLock::new();
-static TS: OnceLock<ThemeSet> = OnceLock::new();
+pub const HIGHLIGHT_NAMES: &[&str] = &[
+    "attribute",
+    "type",
+    "type.builtin",
+    "type.enum",
+    "type.enum.variant",
+    "constructor",
+    "constant",
+    "constant.builtin",
+    "constant.builtin.boolean",
+    "constant.character",
+    "constant.character.escape",
+    "constant.numeric",
+    "constant.numeric.integer",
+    "constant.numeric.float",
+    "string",
+    "string.regexp",
+    "string.special",
+    "string.special.path",
+    "string.special.url",
+    "string.special.symbol",
+    "escape",
+    "comment",
+    "comment.line",
+    "comment.block",
+    "comment.block.documentation",
+    "variable",
+    "variable.builtin",
+    "variable.parameter",
+    "variable.other",
+    "variable.other.member",
+    "label",
+    "punctuation",
+    "punctuation.delimiter",
+    "punctuation.bracket",
+    "punctuation.special",
+    "keyword",
+    "keyword.control",
+    "keyword.control.conditional",
+    "keyword.control.repeat",
+    "keyword.control.import",
+    "keyword.control.return",
+    "keyword.control.exception",
+    "keyword.operator",
+    "keyword.directive",
+    "keyword.function",
+    "keyword.storage",
+    "keyword.storage.type",
+    "keyword.storage.modifier",
+    "operator",
+    "function",
+    "function.builtin",
+    "function.method",
+    "function.macro",
+    "function.special",
+    "tag",
+    "tag.builtin",
+    "namespace",
+    "special",
+    "markup",
+    "markup.heading",
+    "markup.heading.marker",
+    "markup.heading.1",
+    "markup.heading.2",
+    "markup.heading.3",
+    "markup.heading.4",
+    "markup.heading.5",
+    "markup.heading.6",
+    "markup.list",
+    "markup.list.unnumbered",
+    "markup.list.numbered",
+    "markup.list.checked",
+    "markup.list.unchecked",
+    "markup.bold",
+    "markup.italic",
+    "markup.strikethrough",
+    "markup.link",
+    "markup.link.url",
+    "markup.link.label",
+    "markup.link.text",
+    "markup.quote",
+    "markup.raw",
+    "markup.raw.inline",
+    "markup.raw.block",
+    "diff",
+    "diff.plus",
+    "diff.minus",
+    "diff.delta",
+    "diff.delta.moved",
+];
+
+static HIGHLIGHT_CONFIG: OnceLock<HighlightConfiguration> = OnceLock::new();
 
 impl LineDiff {
     fn highlight(&mut self, extension: &str) {
@@ -312,26 +360,35 @@ impl LineDiff {
             .collect::<Vec<_>>()
             .join("");
 
-        let ps = PS.get_or_init(|| SyntaxSet::load_defaults_newlines());
-        let ts = TS.get_or_init(|| ThemeSet::load_defaults());
+        let mut highlighter = Highlighter::new();
+        let lang_rs = tree_sitter_rust::language();
+        let config = HIGHLIGHT_CONFIG.get_or_init(|| {
+            let mut config = HighlightConfiguration::new(
+                lang_rs,
+                "rust",
+                tree_sitter_rust::HIGHLIGHTS_QUERY,
+                tree_sitter_rust::INJECTIONS_QUERY,
+                tree_sitter_rust::TAGS_QUERY,
+            )
+            .unwrap();
+            config.configure(HIGHLIGHT_NAMES);
+            config
+        });
 
-        // TODO: don't load themes/syntax for every line
-        let syntax = ps
-            .find_syntax_by_extension(extension)
-            .unwrap_or_else(|| ps.find_syntax_plain_text());
-        let mut h = HighlightLines::new(syntax, &ts.themes["base16-ocean.light"]);
-        self.fragments = h
-            .highlight_line(&line, &ps)
-            .expect("Failed to highlight line")
-            .into_iter()
-            .flat_map(|(style, text)| {
-                vec![Fragment {
-                    text: text.into(),
-                    status: DiffStatus::Unmodified,
-                    style: Some(style.into()),
-                }]
-            })
-            .collect();
+        for event in highlighter
+            .highlight(&config, &line.as_bytes(), None, |_| None)
+            .unwrap()
+        {
+            match event.unwrap() {
+                HighlightEvent::Source { start, end } => {
+                    dbg!(start, end);
+                }
+                HighlightEvent::HighlightStart(h) => {
+                    dbg!(h, HIGHLIGHT_NAMES[h.0].split('.').collect::<Vec<_>>());
+                }
+                _ => {}
+            }
+        }
     }
 }
 
