@@ -24,8 +24,8 @@ impl FromStr for File {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut parts = s.split(' ').skip(2);
 
-        let src_hash = parse_hash(parts.next().ok_or("Failed to get file src hash")?);
-        let dst_hash = parse_hash(parts.next().ok_or("Failed to get file dst hash")?);
+        let src_hash = GitHash::from_optional(parts.next().ok_or("Failed to get file src hash")?)?;
+        let dst_hash = GitHash::from_optional(parts.next().ok_or("Failed to get file dst hash")?)?;
 
         let (status, paths) = parts
             .next()
@@ -60,13 +60,5 @@ impl FromStr for File {
             src_path,
             dst_path,
         })
-    }
-}
-
-fn parse_hash(s: &str) -> Option<GitHash> {
-    if s.trim_start_matches('0').is_empty() {
-        None
-    } else {
-        Some(GitHash(s.into()))
     }
 }

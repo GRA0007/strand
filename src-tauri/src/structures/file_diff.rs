@@ -1,262 +1,12 @@
-use std::{
-    str::{FromStr, Lines},
-    sync::OnceLock,
-};
+use std::{borrow::BorrowMut, ops::Range};
 
 use serde::Serialize;
-use similar::{utils::TextDiffRemapper, ChangeTag, TextDiff};
 use specta::Type;
 use tree_sitter_highlight::{HighlightConfiguration, HighlightEvent, Highlighter};
 
-#[derive(Debug, Serialize, Type, Clone)]
-pub enum DiffStatus {
-    Added,
-    Removed,
-    Unmodified,
-}
+use crate::structures::file_diff_meta::HunkSection;
 
-#[derive(Debug, Serialize, Type, Clone)]
-pub struct Fragment {
-    pub text: String,
-    pub status: DiffStatus,
-    pub class: Option<Vec<String>>,
-}
-
-#[derive(Debug, Serialize, Type)]
-pub struct LineDiff {
-    pub fragments: Vec<Fragment>,
-    pub status: DiffStatus,
-    /// None if status is Added
-    pub src_line_number: Option<usize>,
-    /// None if status is Removed
-    pub dst_line_number: Option<usize>,
-}
-
-#[derive(Debug)]
-enum HunkSegment {
-    Unmodified(String),
-    Added(String),
-    Removed(String),
-    /// Word diffs only need to be calculated for this variant
-    RemovedAdded(String, String),
-}
-
-#[derive(Debug, Serialize, Type)]
-pub struct DiffHunk {
-    /// Raw header text
-    pub header: String,
-    pub lines: Vec<LineDiff>,
-}
-
-#[derive(Debug, Serialize, Type)]
-pub struct FileDiff(pub Vec<DiffHunk>);
-
-impl TryFrom<char> for DiffStatus {
-    type Error = String;
-    fn try_from(value: char) -> Result<Self, Self::Error> {
-        match value {
-            '+' => Ok(Self::Added),
-            '-' => Ok(Self::Removed),
-            ' ' => Ok(Self::Unmodified),
-            _ => Err("Invalid diff status".into()),
-        }
-    }
-}
-
-impl From<ChangeTag> for DiffStatus {
-    fn from(value: ChangeTag) -> Self {
-        match value {
-            ChangeTag::Equal => Self::Unmodified,
-            ChangeTag::Delete => Self::Removed,
-            ChangeTag::Insert => Self::Added,
-        }
-    }
-}
-
-impl HunkSegment {
-    fn append_line(&mut self, line: &str) {
-        match self {
-            HunkSegment::Unmodified(text)
-            | HunkSegment::Added(text)
-            | HunkSegment::Removed(text) => text.push_str(format!("\n{line}").as_str()),
-            HunkSegment::RemovedAdded(_, added) => added.push_str(format!("\n{line}").as_str()),
-        }
-    }
-}
-
-impl DiffHunk {
-    fn from(s: &str, extension: &str) -> Result<Self, String> {
-        let mut lines = s.lines();
-
-        let header: String = format!("@@{}", lines.next().ok_or("Failed to get header")?);
-        let (mut src_line_number, mut dst_line_number) = parse_line_numbers(&header)?;
-
-        // Group diffs into hunk "segments"
-        let segments = group_diff_into_segments(lines)?;
-
-        // TODO: Reduce duplication of this match
-        // Calculate word diffs and turn segments back into lines
-        let mut lines: Vec<LineDiff> = segments
-            .into_iter()
-            .flat_map(|segment| match segment {
-                HunkSegment::Unmodified(text) => text
-                    .split('\n')
-                    .map(|line| {
-                        let line = LineDiff {
-                            fragments: vec![Fragment {
-                                text: line.into(),
-                                status: DiffStatus::Unmodified,
-                                class: None,
-                            }],
-                            status: DiffStatus::Unmodified,
-                            src_line_number: Some(src_line_number),
-                            dst_line_number: Some(dst_line_number),
-                        };
-                        src_line_number += 1;
-                        dst_line_number += 1;
-                        line
-                    })
-                    .collect::<Vec<_>>(),
-                HunkSegment::Added(text) => text
-                    .split('\n')
-                    .map(|line| {
-                        let line = LineDiff {
-                            fragments: vec![Fragment {
-                                text: line.into(),
-                                status: DiffStatus::Unmodified,
-                                class: None,
-                            }],
-                            status: DiffStatus::Added,
-                            src_line_number: None,
-                            dst_line_number: Some(dst_line_number),
-                        };
-                        dst_line_number += 1;
-                        line
-                    })
-                    .collect(),
-                HunkSegment::Removed(text) => text
-                    .split('\n')
-                    .map(|line| {
-                        let line = LineDiff {
-                            fragments: vec![Fragment {
-                                text: line.into(),
-                                status: DiffStatus::Unmodified,
-                                class: None,
-                            }],
-                            status: DiffStatus::Removed,
-                            src_line_number: Some(src_line_number),
-                            dst_line_number: None,
-                        };
-                        src_line_number += 1;
-                        line
-                    })
-                    .collect(),
-                HunkSegment::RemovedAdded(removed, added) => {
-                    // Calculate word diff
-                    let old_tokenized = tokenize_code(&removed);
-                    let new_tokenized = tokenize_code(&added);
-                    let diff = TextDiff::from_slices(&old_tokenized, &new_tokenized);
-                    let remapper = TextDiffRemapper::from_text_diff(&diff, &removed, &added);
-                    let diff: Vec<_> = diff
-                        .ops()
-                        .iter()
-                        .flat_map(move |x| remapper.iter_slices(x))
-                        .flat_map(|(tag, value)| {
-                            value.split_inclusive('\n').map(move |text| Fragment {
-                                text: text.into(),
-                                status: tag.into(),
-                                class: None,
-                            })
-                        })
-                        .collect();
-
-                    let mut lines = Vec::new();
-
-                    let mut current_line: Vec<Fragment> = Vec::new();
-                    let removed_words: Vec<_> = diff
-                        .iter()
-                        .filter(|word| !matches!(word.status, DiffStatus::Added))
-                        .collect();
-                    for (i, word) in removed_words.iter().enumerate() {
-                        current_line.push(Fragment {
-                            text: word.text.trim_end_matches('\n').into(),
-                            status: word.status.clone(),
-                            class: None,
-                        });
-                        if word.text.ends_with('\n') || i == removed_words.len() - 1 {
-                            lines.push(LineDiff {
-                                fragments: current_line.to_vec(),
-                                status: DiffStatus::Removed,
-                                src_line_number: Some(src_line_number),
-                                dst_line_number: None,
-                            });
-                            src_line_number += 1;
-                            current_line.clear();
-                        }
-                    }
-
-                    let added_words: Vec<_> = diff
-                        .iter()
-                        .filter(|word| !matches!(word.status, DiffStatus::Removed))
-                        .collect();
-                    for (i, word) in added_words.iter().enumerate() {
-                        current_line.push(Fragment {
-                            text: word.text.trim_end_matches('\n').into(),
-                            status: word.status.clone(),
-                            class: None,
-                        });
-                        if word.text.ends_with('\n') || i == added_words.len() - 1 {
-                            lines.push(LineDiff {
-                                fragments: current_line.to_vec(),
-                                status: DiffStatus::Added,
-                                src_line_number: None,
-                                dst_line_number: Some(dst_line_number),
-                            });
-                            dst_line_number += 1;
-                            current_line.clear();
-                        }
-                    }
-
-                    lines
-                }
-            })
-            .collect();
-
-        // Highlight lines
-        lines.iter_mut().for_each(|line| line.highlight(extension));
-
-        Ok(Self { header, lines })
-    }
-}
-
-impl FromStr for FileDiff {
-    type Err = String;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut sections = s.split("\n@@");
-        let diff_header = sections.next().ok_or("Failed to get diff header")?;
-        // TODO: This method of extracting the filename is possibly quite flaky
-        let (removed_filename, added_filename) = diff_header
-            .split_once("--- ")
-            .ok_or("Failed to extract file names")?
-            .1
-            .split_once("\n+++ ")
-            .ok_or("Failed to split file names")?;
-        let extension = if added_filename == "/dev/null" {
-            removed_filename
-        } else {
-            added_filename
-        }
-        .rsplit_once('.')
-        .ok_or("Failed to get file extension")?
-        .1;
-
-        let hunks = sections
-            .map(|hunk| DiffHunk::from(hunk, extension))
-            .collect::<Result<_, _>>()?;
-
-        Ok(Self(hunks))
-    }
-}
+use super::{diff_status::DiffStatus, file_diff_meta::FileDiffMeta};
 
 pub const HIGHLIGHT_NAMES: &[&str] = &[
     "attribute",
@@ -349,112 +99,367 @@ pub const HIGHLIGHT_NAMES: &[&str] = &[
     "diff.delta.moved",
 ];
 
-static HIGHLIGHT_CONFIG: OnceLock<HighlightConfiguration> = OnceLock::new();
+#[derive(Clone)]
+struct Highlight(Vec<(Range<usize>, Vec<String>)>);
 
-impl LineDiff {
-    fn highlight(&mut self, extension: &str) {
-        let line = self
-            .fragments
-            .iter()
-            .map(|f| f.text.as_str())
-            .collect::<Vec<_>>()
-            .join("");
+#[derive(Debug, Serialize, Type, Clone)]
+pub struct Fragment {
+    pub text: String,
+    pub status: DiffStatus,
+    pub class: Option<Vec<String>>,
+}
+
+#[derive(Debug, Serialize, Type, Clone)]
+pub struct LineDiff {
+    pub fragments: Vec<Fragment>,
+    pub status: DiffStatus,
+    /// None if status is Added
+    pub src_line_number: Option<usize>,
+    /// None if status is Removed
+    pub dst_line_number: Option<usize>,
+}
+
+#[derive(Debug, Serialize, Type)]
+pub struct DiffHunk {
+    /// Raw header text, or None if the whole file was requested
+    pub header: Option<String>,
+    pub lines: Vec<LineDiff>,
+}
+
+#[derive(Debug, Serialize, Type)]
+pub struct FileDiff(pub Vec<DiffHunk>);
+
+impl FileDiff {
+    pub fn from(
+        meta: FileDiffMeta,
+        src_file: Option<String>,
+        dst_file: Option<String>,
+    ) -> Result<Self, String> {
+        // TODO: Investigate how to avoid cloning every line
+        let src_lines: Option<Vec<String>> = src_file
+            .clone()
+            .map(|file| file.lines().map(|l| l.into()).collect());
+        let dst_lines: Option<Vec<String>> = dst_file
+            .clone()
+            .map(|file| file.lines().map(|l| l.into()).collect());
 
         let mut highlighter = Highlighter::new();
         let lang_rs = tree_sitter_rust::language();
-        let config = HIGHLIGHT_CONFIG.get_or_init(|| {
-            let mut config = HighlightConfiguration::new(
-                lang_rs,
-                "rust",
-                tree_sitter_rust::HIGHLIGHTS_QUERY,
-                tree_sitter_rust::INJECTIONS_QUERY,
-                tree_sitter_rust::TAGS_QUERY,
-            )
-            .unwrap();
-            config.configure(HIGHLIGHT_NAMES);
-            config
+        let mut config = HighlightConfiguration::new(
+            lang_rs,
+            "rust",
+            tree_sitter_rust::HIGHLIGHTS_QUERY,
+            tree_sitter_rust::INJECTIONS_QUERY,
+            tree_sitter_rust::TAGS_QUERY,
+        )
+        .unwrap();
+        config.configure(HIGHLIGHT_NAMES);
+
+        let src_highlight = src_file
+            .as_ref()
+            .map(|file| Highlight::from(highlighter.borrow_mut(), &config, file));
+        let dst_highlight = dst_file
+            .as_ref()
+            .map(|file| Highlight::from(highlighter.borrow_mut(), &config, file));
+
+        Ok(Self(
+            meta.hunks
+                .into_iter()
+                .map(|hunk| {
+                    let lines: Vec<LineDiff> = hunk
+                        .sections
+                        .into_iter()
+                        .flat_map(|section| {
+                            match (section, &src_lines, &dst_lines) {
+                                (HunkSection::Unmodified(line_numbers), Some(_), Some(lines)) => {
+                                    line_numbers
+                                        .into_iter()
+                                        .map(|(src_line, dst_line)| LineDiff {
+                                            fragments: Fragment::from_highlighted(
+                                                line_number_range(
+                                                    dst_line,
+                                                    dst_file.as_ref().unwrap(),
+                                                ),
+                                                lines[dst_line].clone(),
+                                                DiffStatus::Unmodified,
+                                                dst_highlight.as_ref().unwrap(),
+                                            ),
+                                            status: DiffStatus::Unmodified,
+                                            src_line_number: Some(src_line),
+                                            dst_line_number: Some(dst_line),
+                                        })
+                                        .collect::<Vec<_>>()
+                                }
+                                (HunkSection::Added(line_numbers), Some(_) | None, Some(lines)) => {
+                                    line_numbers
+                                        .into_iter()
+                                        .map(|line_number| LineDiff {
+                                            fragments: Fragment::from_highlighted(
+                                                line_number_range(
+                                                    line_number,
+                                                    dst_file.as_ref().unwrap(),
+                                                ),
+                                                lines[line_number].clone(),
+                                                DiffStatus::Unmodified,
+                                                dst_highlight.as_ref().unwrap(),
+                                            ),
+                                            status: DiffStatus::Added,
+                                            src_line_number: None,
+                                            dst_line_number: Some(line_number),
+                                        })
+                                        .collect::<Vec<_>>()
+                                }
+                                (
+                                    HunkSection::Removed(line_numbers),
+                                    Some(lines),
+                                    Some(_) | None,
+                                ) => line_numbers
+                                    .into_iter()
+                                    .map(|line_number| LineDiff {
+                                        fragments: Fragment::from_highlighted(
+                                            line_number_range(
+                                                line_number,
+                                                src_file.as_ref().unwrap(),
+                                            ),
+                                            lines[line_number].clone(),
+                                            DiffStatus::Unmodified,
+                                            src_highlight.as_ref().unwrap(),
+                                        ),
+                                        status: DiffStatus::Removed,
+                                        src_line_number: Some(line_number),
+                                        dst_line_number: None,
+                                    })
+                                    .collect::<Vec<_>>(),
+                                (
+                                    HunkSection::RemovedAdded(
+                                        removed_line_numbers,
+                                        added_line_numbers,
+                                    ),
+                                    Some(removed_lines),
+                                    Some(added_lines),
+                                ) => {
+                                    let removed_text = removed_line_numbers
+                                        .iter()
+                                        .map(|i| removed_lines[*i].clone())
+                                        .collect::<Vec<_>>()
+                                        .join("\n");
+                                    let added_text = added_line_numbers
+                                        .iter()
+                                        .map(|i| added_lines[*i].clone())
+                                        .collect::<Vec<_>>()
+                                        .join("\n");
+
+                                    // Calculate word diff
+                                    let removed_tokenized = tokenize_code(&removed_text);
+                                    let added_tokenized = tokenize_code(&added_text);
+                                    let diff = similar::TextDiff::from_slices(
+                                        &removed_tokenized,
+                                        &added_tokenized,
+                                    );
+                                    let remapper = similar::utils::TextDiffRemapper::from_text_diff(
+                                        &diff,
+                                        &removed_text,
+                                        &added_text,
+                                    );
+                                    let (mut src_pos, mut dst_pos) = (
+                                        line_number_range(
+                                            *removed_line_numbers.first().unwrap(),
+                                            src_file.as_ref().unwrap(),
+                                        )
+                                        .start,
+                                        line_number_range(
+                                            *added_line_numbers.first().unwrap(),
+                                            dst_file.as_ref().unwrap(),
+                                        )
+                                        .start,
+                                    );
+                                    let diff: Vec<_> = diff
+                                        .ops()
+                                        .iter()
+                                        .flat_map(move |x| remapper.iter_slices(x))
+                                        .flat_map(|(tag, value)| {
+                                            // TODO: I probably shouldn't need to clone these here
+                                            let dst_highlight = dst_highlight.clone();
+                                            let src_highlight = src_highlight.clone();
+                                            value.split_inclusive('\n').flat_map(move |text| {
+                                                Fragment::from_highlighted(
+                                                    match tag {
+                                                        similar::ChangeTag::Equal => {
+                                                            let pos = dst_pos..dst_pos + text.len();
+                                                            src_pos += text.len();
+                                                            dst_pos += text.len();
+                                                            pos
+                                                        }
+                                                        similar::ChangeTag::Insert => {
+                                                            let pos = dst_pos..dst_pos + text.len();
+                                                            dst_pos += text.len();
+                                                            pos
+                                                        }
+                                                        similar::ChangeTag::Delete => {
+                                                            let pos = src_pos..src_pos + text.len();
+                                                            src_pos += text.len();
+                                                            pos
+                                                        }
+                                                    },
+                                                    text.into(),
+                                                    tag.into(),
+                                                    match tag {
+                                                        similar::ChangeTag::Equal
+                                                        | similar::ChangeTag::Insert => {
+                                                            dst_highlight.as_ref()
+                                                        }
+                                                        similar::ChangeTag::Delete => {
+                                                            src_highlight.as_ref()
+                                                        }
+                                                    }
+                                                    .unwrap(),
+                                                )
+                                            })
+                                        })
+                                        .collect();
+
+                                    let removed_lines: Vec<_> = split_fragments_into_lines(
+                                        diff.iter()
+                                            .filter(|f| !matches!(f.status, DiffStatus::Added))
+                                            .collect(),
+                                    )
+                                    .into_iter()
+                                    .enumerate()
+                                    .map(|(i, line)| LineDiff {
+                                        fragments: line,
+                                        status: DiffStatus::Removed,
+                                        src_line_number: Some(removed_line_numbers[i]),
+                                        dst_line_number: None,
+                                    })
+                                    .collect();
+
+                                    let added_lines: Vec<_> = split_fragments_into_lines(
+                                        diff.iter()
+                                            .filter(|f| !matches!(f.status, DiffStatus::Removed))
+                                            .collect(),
+                                    )
+                                    .into_iter()
+                                    .enumerate()
+                                    .map(|(i, line)| LineDiff {
+                                        fragments: line,
+                                        status: DiffStatus::Added,
+                                        src_line_number: None,
+                                        dst_line_number: Some(added_line_numbers[i]),
+                                    })
+                                    .collect();
+
+                                    [removed_lines, added_lines].concat()
+                                }
+                                _ => panic!("Invalid hunk section"),
+                            }
+                        })
+                        .collect();
+
+                    DiffHunk {
+                        header: Some(hunk.header),
+                        lines,
+                    }
+                })
+                .collect(),
+        ))
+    }
+}
+
+impl Fragment {
+    fn from_highlighted(
+        pos: Range<usize>,
+        text: String,
+        status: DiffStatus,
+        highlights: &Highlight,
+    ) -> Vec<Self> {
+        let start = pos.start;
+
+        highlights
+            .0
+            .iter()
+            .filter(|h| pos.contains(&h.0.start) && pos.contains(&h.0.end))
+            .map(|h| Self {
+                text: text
+                    .get(h.0.start - start..h.0.end - start)
+                    .expect(&format!("{} {:?}", text, h.0))
+                    .into(),
+                status: status.clone(),
+                class: Some(h.1.clone()),
+            })
+            .collect()
+    }
+}
+
+/// Take fragments where some may be terminated by a newline, and split on that.
+/// Removes all newlines.
+fn split_fragments_into_lines(fragments: Vec<&Fragment>) -> Vec<Vec<Fragment>> {
+    let len = fragments.len();
+    let mut lines = vec![Vec::new()];
+    for (i, fragment) in fragments.into_iter().enumerate() {
+        lines.last_mut().unwrap().push(Fragment {
+            text: fragment.text.trim_end_matches('\n').into(),
+            ..fragment.clone()
         });
+        if fragment.text.ends_with('\n') && i != len - 1 {
+            lines.push(Vec::new());
+        }
+    }
+    lines
+}
+
+/// Get the start..end range of a single line in a file
+fn line_number_range(line_number: usize, file: &str) -> Range<usize> {
+    let mut current_line = 1; // Line numbers start at 1
+    let mut start = 0;
+    let end = file
+        .chars()
+        .skip_while(|c| {
+            if current_line != line_number {
+                if *c == '\n' {
+                    current_line += 1;
+                } else {
+                    start += 1;
+                }
+                true
+            } else {
+                false
+            }
+        })
+        .take_while(|c| *c != '\n')
+        .count();
+    start..start + end
+}
+
+impl Highlight {
+    fn from(highlighter: &mut Highlighter, config: &HighlightConfiguration, text: &str) -> Self {
+        let mut highlights = Vec::new();
+        let mut current_range: Option<Range<usize>> = None;
+        let mut current_class: Option<Vec<String>> = None;
 
         for event in highlighter
-            .highlight(&config, &line.as_bytes(), None, |_| None)
+            .highlight(config, text.as_bytes(), None, |_| None)
             .unwrap()
         {
             match event.unwrap() {
-                HighlightEvent::Source { start, end } => {
-                    dbg!(start, end);
-                }
                 HighlightEvent::HighlightStart(h) => {
-                    dbg!(h, HIGHLIGHT_NAMES[h.0].split('.').collect::<Vec<_>>());
+                    current_class =
+                        Some(HIGHLIGHT_NAMES[h.0].split('.').map(|c| c.into()).collect());
                 }
-                _ => {}
-            }
-        }
-    }
-}
-
-/// Get the src and dst line numbers from a hunk header
-fn parse_line_numbers(header: &str) -> Result<(usize, usize), String> {
-    let numbers = header
-        .trim_start_matches("@@ ")
-        .split_once(" @@")
-        .ok_or("Failed to split on @@ in diff header")?
-        .0;
-    let (src, dst) = numbers
-        .split_once(' ')
-        .ok_or("Failed to split src and dst in diff header")?;
-    let src_line_number = src
-        .trim_start_matches('-')
-        .split_once(',')
-        .ok_or("Failed to split src in diff header")?
-        .0
-        .parse()
-        .map_err(|err| format!("Couldn't parse src_line_number {}", err))?;
-    let dst_line_number = dst
-        .trim_start_matches('+')
-        .split_once(',')
-        .ok_or("Failed to split dst in diff header")?
-        .0
-        .parse()
-        .map_err(|err| format!("Couldn't parse dst_line_number {}", err))?;
-    Ok((src_line_number, dst_line_number))
-}
-
-#[rustfmt::skip]
-fn group_diff_into_segments(lines: Lines) -> Result<Vec<HunkSegment>, String> {
-    let mut segments: Vec<HunkSegment> = Vec::new();
-    for line in lines {
-        let (status, text) = if line.is_empty() { (" ", "") } else { line.split_at(1) };
-
-        let status: DiffStatus = status
-            .chars()
-            .next()
-            .ok_or("Diff status char")?
-            .try_into()?;
-
-        let previous_segment = segments.last_mut();
-        match (&previous_segment, status) {
-            (None | Some(HunkSegment::Unmodified(_)), DiffStatus::Added) => {
-                segments.push(HunkSegment::Added(text.into()))
-            }
-            (None | Some(HunkSegment::Unmodified(_) | HunkSegment::Added(_) | HunkSegment::RemovedAdded(_, _)), DiffStatus::Removed) => {
-                segments.push(HunkSegment::Removed(text.into()))
-            }
-            (Some(HunkSegment::Unmodified(_)), DiffStatus::Unmodified) | (Some(HunkSegment::Removed(_)), DiffStatus::Removed)
-            | (Some(HunkSegment::Added(_) | HunkSegment::RemovedAdded(_, _)), DiffStatus::Added) => {
-                previous_segment.unwrap().append_line(text)
-            }
-            (None | Some(HunkSegment::Added(_) | HunkSegment::Removed(_) | HunkSegment::RemovedAdded(_, _)), DiffStatus::Unmodified) => {
-                segments.push(HunkSegment::Unmodified(text.into()))
-            }
-            (Some(HunkSegment::Removed(_)), DiffStatus::Added) => {
-                if let Some(HunkSegment::Removed(removed)) = segments.pop() {
-                    segments.push(HunkSegment::RemovedAdded(removed, text.into()));
+                HighlightEvent::Source { start, end } => {
+                    current_range = Some(start..end);
+                }
+                HighlightEvent::HighlightEnd => {
+                    if let Some(range) = current_range.clone() {
+                        if let Some(class) = current_class.clone() {
+                            highlights.push((range, class))
+                        }
+                    }
                 }
             }
         }
-    }
 
-    Ok(segments)
+        Self(highlights)
+    }
 }
 
 /// Tokenize into chars, but keep runs of ascii letters and numbers in single tokens
@@ -476,4 +481,21 @@ fn tokenize_code(s: &str) -> Vec<&str> {
     }
 
     rv
+}
+
+#[cfg(test)]
+mod test {
+    use crate::structures::file_diff::line_number_range;
+
+    #[test]
+    fn calculates_line_number_range() {
+        let file = "First line
+Second line
+Third line
+Fourth and final line";
+        assert_eq!(line_number_range(1, file), 0..10);
+        assert_eq!(line_number_range(2, file), 10..21);
+        assert_eq!(line_number_range(3, file), 21..31);
+        assert_eq!(line_number_range(4, file), 31..52);
+    }
 }

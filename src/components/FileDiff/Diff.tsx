@@ -32,14 +32,8 @@ const DiffLine = ({ line, id }: { line: LineDiff; id: string }) => {
           className={cn(
             word.status === 'Removed' && numUnmodified > 0 && 'bg-error/20',
             word.status === 'Added' && numUnmodified > 0 && 'bg-success/20',
-            word.style?.font_style.bold && 'font-bold',
-            word.style?.font_style.italic && 'italic',
-            word.style?.font_style.underline && 'underline',
+            ...(word.class ?? []),
           )}
-          style={{
-            color: `rgb(${word.style?.foreground[0]} ${word.style?.foreground[1]} ${word.style?.foreground[2]} / ${word.style?.foreground[3]})`,
-            background: `rgb(${word.style?.background[0]} ${word.style?.background[1]} ${word.style?.background[2]} / ${word.style?.background[3]})`,
-          }}
         >
           {word.text}
         </DiffWord>

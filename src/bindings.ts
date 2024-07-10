@@ -105,9 +105,9 @@ export type Commit = { hash: GitHash; parent_hashes: GitHash[]; author: CommitUs
 export type CommitUser = { name: string; email: string; date: string; email_hash: string }
 export type DiffHunk = { 
 /**
- * Raw header text
+ * Raw header text, or None if the whole file was requested
  */
-header: string; lines: LineDiff[] }
+header: string | null; lines: LineDiff[] }
 export type DiffStatus = "Added" | "Removed" | "Unmodified"
 export type File = { 
 /**
