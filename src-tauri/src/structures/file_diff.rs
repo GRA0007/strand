@@ -1,4 +1,4 @@
-use std::{borrow::BorrowMut, ops::Range};
+use std::{borrow::BorrowMut, ops::Range, time::Duration};
 
 use serde::Serialize;
 use specta::Type;
@@ -136,13 +136,8 @@ impl FileDiff {
         src_file: Option<String>,
         dst_file: Option<String>,
     ) -> Result<Self, String> {
-        // TODO: Investigate how to avoid cloning every line
-        let src_lines: Option<Vec<String>> = src_file
-            .clone()
-            .map(|file| file.lines().map(|l| l.into()).collect());
-        let dst_lines: Option<Vec<String>> = dst_file
-            .clone()
-            .map(|file| file.lines().map(|l| l.into()).collect());
+        let src_lines: Option<Vec<&str>> = src_file.as_ref().map(|file| file.lines().collect());
+        let dst_lines: Option<Vec<&str>> = dst_file.as_ref().map(|file| file.lines().collect());
 
         let mut highlighter = Highlighter::new();
         let lang_rs = tree_sitter_rust::language();
@@ -181,7 +176,7 @@ impl FileDiff {
                                                     dst_line,
                                                     dst_file.as_ref().unwrap(),
                                                 ),
-                                                lines[dst_line - 1].clone(),
+                                                lines[dst_line - 1].into(),
                                                 DiffStatus::Unmodified,
                                                 dst_highlight.as_ref().unwrap(),
                                             ),
@@ -200,7 +195,7 @@ impl FileDiff {
                                                     line_number,
                                                     dst_file.as_ref().unwrap(),
                                                 ),
-                                                lines[line_number - 1].clone(),
+                                                lines[line_number - 1].into(),
                                                 DiffStatus::Unmodified,
                                                 dst_highlight.as_ref().unwrap(),
                                             ),
@@ -222,7 +217,7 @@ impl FileDiff {
                                                 line_number,
                                                 src_file.as_ref().unwrap(),
                                             ),
-                                            lines[line_number - 1].clone(),
+                                            lines[line_number - 1].into(),
                                             DiffStatus::Unmodified,
                                             src_highlight.as_ref().unwrap(),
                                         ),
@@ -241,22 +236,22 @@ impl FileDiff {
                                 ) => {
                                     let removed_text = removed_line_numbers
                                         .iter()
-                                        .map(|i| removed_lines[*i - 1].clone())
+                                        .map(|i| removed_lines[*i - 1])
                                         .collect::<Vec<_>>()
                                         .join("\n");
                                     let added_text = added_line_numbers
                                         .iter()
-                                        .map(|i| added_lines[*i - 1].clone())
+                                        .map(|i| added_lines[*i - 1])
                                         .collect::<Vec<_>>()
                                         .join("\n");
 
                                     // Calculate word diff
                                     let removed_tokenized = tokenize_code(&removed_text);
                                     let added_tokenized = tokenize_code(&added_text);
-                                    let diff = similar::TextDiff::from_slices(
-                                        &removed_tokenized,
-                                        &added_tokenized,
-                                    );
+                                    let diff = similar::TextDiff::configure()
+                                        .algorithm(similar::Algorithm::Patience)
+                                        .timeout(Duration::from_millis(500))
+                                        .diff_slices(&removed_tokenized, &added_tokenized);
                                     let remapper = similar::utils::TextDiffRemapper::from_text_diff(
                                         &diff,
                                         &removed_text,
@@ -505,7 +500,13 @@ fn tokenize_code(s: &str) -> Vec<&str> {
         let start = idx;
         let mut end = idx + c.len_utf8();
         while let Some(&(_, next_char)) = iter.peek() {
-            if !next_char.is_ascii_alphanumeric() || !c.is_ascii_alphanumeric() {
+            if !(((next_char.is_ascii_alphanumeric() || next_char == '_')
+                && (c.is_ascii_alphanumeric() || c == '_'))
+                || (next_char.is_whitespace()
+                    && next_char != '\n'
+                    && c.is_whitespace()
+                    && c != '\n'))
+            {
                 break;
             }
             iter.next();
