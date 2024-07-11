@@ -31,6 +31,7 @@ pub const HIGHLIGHT_NAMES: &[&str] = &[
     "string.special.symbol",
     "escape",
     "comment",
+    "comment.documentation",
     "comment.line",
     "comment.block",
     "comment.block.documentation",
@@ -102,7 +103,7 @@ pub const HIGHLIGHT_NAMES: &[&str] = &[
 #[derive(Clone)]
 struct Highlight(Vec<(Range<usize>, Vec<String>)>);
 
-#[derive(Debug, Serialize, Type, Clone)]
+#[derive(Debug, Serialize, Type, Clone, Eq, PartialEq)]
 pub struct Fragment {
     pub text: String,
     pub status: DiffStatus,
@@ -180,7 +181,7 @@ impl FileDiff {
                                                     dst_line,
                                                     dst_file.as_ref().unwrap(),
                                                 ),
-                                                lines[dst_line].clone(),
+                                                lines[dst_line - 1].clone(),
                                                 DiffStatus::Unmodified,
                                                 dst_highlight.as_ref().unwrap(),
                                             ),
@@ -199,7 +200,7 @@ impl FileDiff {
                                                     line_number,
                                                     dst_file.as_ref().unwrap(),
                                                 ),
-                                                lines[line_number].clone(),
+                                                lines[line_number - 1].clone(),
                                                 DiffStatus::Unmodified,
                                                 dst_highlight.as_ref().unwrap(),
                                             ),
@@ -221,7 +222,7 @@ impl FileDiff {
                                                 line_number,
                                                 src_file.as_ref().unwrap(),
                                             ),
-                                            lines[line_number].clone(),
+                                            lines[line_number - 1].clone(),
                                             DiffStatus::Unmodified,
                                             src_highlight.as_ref().unwrap(),
                                         ),
@@ -240,12 +241,12 @@ impl FileDiff {
                                 ) => {
                                     let removed_text = removed_line_numbers
                                         .iter()
-                                        .map(|i| removed_lines[*i].clone())
+                                        .map(|i| removed_lines[*i - 1].clone())
                                         .collect::<Vec<_>>()
                                         .join("\n");
                                     let added_text = added_line_numbers
                                         .iter()
-                                        .map(|i| added_lines[*i].clone())
+                                        .map(|i| added_lines[*i - 1].clone())
                                         .collect::<Vec<_>>()
                                         .join("\n");
 
@@ -328,7 +329,7 @@ impl FileDiff {
                                     .map(|(i, line)| LineDiff {
                                         fragments: line,
                                         status: DiffStatus::Removed,
-                                        src_line_number: Some(removed_line_numbers[i]),
+                                        src_line_number: Some(removed_line_numbers[i - 1]),
                                         dst_line_number: None,
                                     })
                                     .collect();
@@ -344,7 +345,7 @@ impl FileDiff {
                                         fragments: line,
                                         status: DiffStatus::Added,
                                         src_line_number: None,
-                                        dst_line_number: Some(added_line_numbers[i]),
+                                        dst_line_number: Some(added_line_numbers[i - 1]),
                                     })
                                     .collect();
 
@@ -366,25 +367,30 @@ impl FileDiff {
 }
 
 impl Fragment {
+    /// Takes a string with a status and applies highlights to it.
+    ///
+    /// - `source_range`: The range of the `text` from it's file
+    /// - `text`: The raw text
+    /// - `status`: The diff status, passed through
+    /// - `highlights`: The full highlights for the file that `text` belongs to
     fn from_highlighted(
-        pos: Range<usize>,
+        source_range: Range<usize>,
         text: String,
         status: DiffStatus,
         highlights: &Highlight,
     ) -> Vec<Self> {
-        let start = pos.start;
+        let start = source_range.start;
 
         highlights
-            .0
-            .iter()
-            .filter(|h| pos.contains(&h.0.start) && pos.contains(&h.0.end))
+            .get_ranges(source_range)
+            .into_iter()
             .map(|h| Self {
                 text: text
                     .get(h.0.start - start..h.0.end - start)
-                    .expect(&format!("{} {:?}", text, h.0))
+                    .expect("Range not within text bounds")
                     .into(),
                 status: status.clone(),
-                class: Some(h.1.clone()),
+                class: h.1,
             })
             .collect()
     }
@@ -409,24 +415,17 @@ fn split_fragments_into_lines(fragments: Vec<&Fragment>) -> Vec<Vec<Fragment>> {
 
 /// Get the start..end range of a single line in a file
 fn line_number_range(line_number: usize, file: &str) -> Range<usize> {
-    let mut current_line = 1; // Line numbers start at 1
-    let mut start = 0;
-    let end = file
-        .chars()
-        .skip_while(|c| {
-            if current_line != line_number {
-                if *c == '\n' {
-                    current_line += 1;
-                } else {
-                    start += 1;
-                }
-                true
-            } else {
-                false
-            }
-        })
-        .take_while(|c| *c != '\n')
+    let mut lines = file.split_inclusive('\n');
+    let start = lines
+        .clone()
+        .take(line_number - 1)
+        .flat_map(|s| s.chars())
         .count();
+    let end = lines
+        .nth(line_number - 1)
+        .unwrap()
+        .trim_end_matches('\n')
+        .len();
     start..start + end
 }
 
@@ -460,6 +459,35 @@ impl Highlight {
 
         Self(highlights)
     }
+
+    /// Takes a range and returns the highlighted ranges and fills in the gaps with None ranges
+    fn get_ranges(&self, range: Range<usize>) -> Vec<(Range<usize>, Option<Vec<String>>)> {
+        let mut ranges = Vec::new();
+        let mut current_start = range.start;
+
+        // Assume the ranges are sorted
+        let highlights_in_range = self
+            .0
+            .iter()
+            .filter(|h| range.contains(&h.0.start) && range.contains(&(h.0.end - 1)));
+
+        for (r, class) in highlights_in_range {
+            // Gap between the current pos and the start of the next range
+            if current_start < r.start {
+                ranges.push((current_start..r.start, None))
+            }
+
+            ranges.push((r.clone(), Some(class.clone())));
+            current_start = r.end;
+        }
+
+        // Gap after the last range
+        if current_start < range.end {
+            ranges.push((current_start..range.end, None))
+        }
+
+        ranges
+    }
 }
 
 /// Tokenize into chars, but keep runs of ascii letters and numbers in single tokens
@@ -485,7 +513,9 @@ fn tokenize_code(s: &str) -> Vec<&str> {
 
 #[cfg(test)]
 mod test {
-    use crate::structures::file_diff::line_number_range;
+    use crate::structures::{diff_status::DiffStatus, file_diff::line_number_range};
+
+    use super::{Fragment, Highlight};
 
     #[test]
     fn calculates_line_number_range() {
@@ -493,9 +523,117 @@ mod test {
 Second line
 Third line
 Fourth and final line";
-        assert_eq!(line_number_range(1, file), 0..10);
-        assert_eq!(line_number_range(2, file), 10..21);
-        assert_eq!(line_number_range(3, file), 21..31);
-        assert_eq!(line_number_range(4, file), 31..52);
+        assert_eq!(file.get(line_number_range(1, file)), Some("First line"));
+        assert_eq!(file.get(line_number_range(2, file)), Some("Second line"));
+        assert_eq!(file.get(line_number_range(3, file)), Some("Third line"));
+        assert_eq!(
+            file.get(line_number_range(4, file)),
+            Some("Fourth and final line")
+        );
+    }
+
+    #[test]
+    fn fills_in_range_gaps() {
+        let file = "line 1\n  second line";
+        let highlights = Highlight(vec![
+            (0..4, vec!["variable".into()]),
+            (5..6, vec!["constant".into()]),
+            (9..15, vec!["variable".into()]),
+            (16..20, vec!["constant".into()]),
+        ]);
+        let ranges = highlights.get_ranges(line_number_range(2, file));
+
+        assert_eq!(
+            ranges,
+            vec![
+                (7..9, None),
+                (9..15, Some(vec!["variable".into()])),
+                (15..16, None),
+                (16..20, Some(vec!["constant".into()])),
+            ]
+        );
+    }
+
+    #[test]
+    fn creates_fragments_from_highlights() {
+        let file = "// My cool string\nlet my_variable = String::from(\"Something\");";
+        let highlights = Highlight(vec![
+            (0..17, vec!["comment".into()]),
+            (18..21, vec!["keyword".into()]),
+            (22..33, vec!["variable".into()]),
+            (34..35, vec!["operator".into()]),
+            (36..42, vec!["constructor".into()]),
+            (42..44, vec!["punctuation".into()]),
+            (44..48, vec!["function".into()]),
+            (48..61, vec!["string".into()]),
+            (61..62, vec!["punctuation".into()]),
+        ]);
+        let fragments = Fragment::from_highlighted(
+            line_number_range(2, file),
+            file.get(line_number_range(2, file)).unwrap().into(),
+            DiffStatus::Unmodified,
+            &highlights,
+        );
+
+        assert_eq!(
+            fragments,
+            vec![
+                Fragment {
+                    text: "let".into(),
+                    status: DiffStatus::Unmodified,
+                    class: Some(vec!["keyword".into()])
+                },
+                Fragment {
+                    text: " ".into(),
+                    status: DiffStatus::Unmodified,
+                    class: None,
+                },
+                Fragment {
+                    text: "my_variable".into(),
+                    status: DiffStatus::Unmodified,
+                    class: Some(vec!["variable".into()])
+                },
+                Fragment {
+                    text: " ".into(),
+                    status: DiffStatus::Unmodified,
+                    class: None,
+                },
+                Fragment {
+                    text: "=".into(),
+                    status: DiffStatus::Unmodified,
+                    class: Some(vec!["operator".into()])
+                },
+                Fragment {
+                    text: " ".into(),
+                    status: DiffStatus::Unmodified,
+                    class: None,
+                },
+                Fragment {
+                    text: "String".into(),
+                    status: DiffStatus::Unmodified,
+                    class: Some(vec!["constructor".into()])
+                },
+                Fragment {
+                    text: "::".into(),
+                    status: DiffStatus::Unmodified,
+                    class: Some(vec!["punctuation".into()])
+                },
+                Fragment {
+                    text: "from".into(),
+                    status: DiffStatus::Unmodified,
+                    class: Some(vec!["function".into()])
+                },
+                Fragment {
+                    text: "(\"Something\")".into(),
+                    status: DiffStatus::Unmodified,
+                    class: Some(vec!["string".into()])
+                },
+                Fragment {
+                    text: ";".into(),
+                    status: DiffStatus::Unmodified,
+                    class: Some(vec!["punctuation".into()])
+                },
+            ]
+        );
     }
 }

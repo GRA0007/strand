@@ -3,61 +3,83 @@
 @tailwind utilities;
 
 @font-face {
-  font-family: 'Inter';
-  font-weight: 100 900;
-  font-style: oblique 0deg 10deg;
-  src: url('/fonts/inter-slnt,wght.woff2') format('woff2');
+    font-family: "Inter";
+    font-weight: 100 900;
+    font-style: oblique 0deg 10deg;
+    src: url("/fonts/inter-slnt,wght.woff2") format("woff2");
 }
 
 :root {
-  --font-family-sans: 'Inter', sans-serif;
+    --font-family-sans: "Inter", sans-serif;
 
-  --color-background: 24 24 24; /* #181818 */
-  --color-foreground: 238 238 238; /* #EEEEEE */
-  --color-surface: 40 40 40; /* #282828 */
+    --color-background: 24 24 24; /* #181818 */
+    --color-foreground: 238 238 238; /* #EEEEEE */
+    --color-surface: 40 40 40; /* #282828 */
 
-  --color-info: 92 175 252; /* #5CAFFC */
-  --color-success: 92 193 84; /* #5CC154 */
-  --color-warn: 218 142 71; /* #DA8E47 */
-  --color-error: 242 93 93; /* #F25D5D */
+    --color-info: 92 175 252; /* #5CAFFC */
+    --color-success: 92 193 84; /* #5CC154 */
+    --color-warn: 218 142 71; /* #DA8E47 */
+    --color-error: 242 93 93; /* #F25D5D */
 }
 
 @media (prefers-color-scheme: light) {
-  :root {
-    --color-background: 255 255 255; /* #FFFFFF */
-    --color-foreground: 0 0 0; /* #000000 */
-    --color-surface: 238 238 238; /* #EEEEEE */
+    :root {
+        --color-background: 255 255 255; /* #FFFFFF */
+        --color-foreground: 0 0 0; /* #000000 */
+        --color-surface: 238 238 238; /* #EEEEEE */
 
-    --color-info: 19 134 240; /* #1386F0 */
-    --color-success: 17 154 7; /* #119A07 */
-    --color-warn: 201 102 7; /* #C96609 */
-    --color-error: 181 10 10; /* #B50B0B */
-  }
+        --color-info: 19 134 240; /* #1386F0 */
+        --color-success: 17 154 7; /* #119A07 */
+        --color-warn: 201 102 7; /* #C96609 */
+        --color-error: 181 10 10; /* #B50B0B */
+    }
 }
 
 @layer utilities {
-  .slant {
-    font-variation-settings: "slnt" -10;
-  }
+    .slant {
+        font-variation-settings: "slnt" -10;
+    }
 }
 
 :root {
-  font-size: 16px;
-  font-weight: 400;
-  @apply bg-background text-foreground font-sans;
+    font-size: 16px;
+    font-weight: 400;
+    @apply bg-background text-foreground font-sans;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-  overscroll-behavior: none;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior: none;
 }
 
 html {
-  @apply select-none cursor-default;
+    @apply select-none cursor-default;
 }
 
 button {
-  @apply cursor-default;
+    @apply cursor-default;
+}
+
+.keyword {
+    color: blue;
+}
+.punctuation {
+    color: royalblue;
+}
+.constructor {
+    color: firebrick;
+}
+.comment {
+    color: gray;
+}
+.type {
+    color: hotpink;
+}
+.string {
+    color: olive;
+}
+.function {
+    color: darkcyan;
 }
