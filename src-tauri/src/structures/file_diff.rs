@@ -262,7 +262,7 @@ impl FileDiff {
                                         &removed_text,
                                         &added_text,
                                     );
-                                    let (mut src_pos, mut dst_pos) = (
+                                    let (src_pos, dst_pos) = (
                                         line_number_range(
                                             *removed_line_numbers.first().unwrap(),
                                             src_file.as_ref().unwrap(),
@@ -274,50 +274,56 @@ impl FileDiff {
                                         )
                                         .start,
                                     );
-                                    let diff: Vec<_> = diff
+                                    let (_, _, diff) = diff
                                         .ops()
                                         .iter()
                                         .flat_map(move |x| remapper.iter_slices(x))
-                                        .flat_map(|(tag, value)| {
-                                            // TODO: I probably shouldn't need to clone these here
-                                            let dst_highlight = dst_highlight.clone();
-                                            let src_highlight = src_highlight.clone();
-                                            value.split_inclusive('\n').flat_map(move |text| {
-                                                Fragment::from_highlighted(
-                                                    match tag {
-                                                        similar::ChangeTag::Equal => {
-                                                            let pos = dst_pos..dst_pos + text.len();
-                                                            src_pos += text.len();
-                                                            dst_pos += text.len();
-                                                            pos
-                                                        }
-                                                        similar::ChangeTag::Insert => {
-                                                            let pos = dst_pos..dst_pos + text.len();
-                                                            dst_pos += text.len();
-                                                            pos
-                                                        }
-                                                        similar::ChangeTag::Delete => {
-                                                            let pos = src_pos..src_pos + text.len();
-                                                            src_pos += text.len();
-                                                            pos
-                                                        }
+                                        .fold(
+                                            (src_pos, dst_pos, Vec::new()),
+                                            |(mut src_pos, mut dst_pos, mut diff), (tag, value)| {
+                                                diff.extend(value.split_inclusive('\n').flat_map(
+                                                    |text| {
+                                                        Fragment::from_highlighted(
+                                                            match tag {
+                                                                similar::ChangeTag::Equal => {
+                                                                    let pos = dst_pos
+                                                                        ..dst_pos + text.len();
+                                                                    src_pos += text.len();
+                                                                    dst_pos += text.len();
+                                                                    pos
+                                                                }
+                                                                similar::ChangeTag::Insert => {
+                                                                    let pos = dst_pos
+                                                                        ..dst_pos + text.len();
+                                                                    dst_pos += text.len();
+                                                                    pos
+                                                                }
+                                                                similar::ChangeTag::Delete => {
+                                                                    let pos = src_pos
+                                                                        ..src_pos + text.len();
+                                                                    src_pos += text.len();
+                                                                    pos
+                                                                }
+                                                            },
+                                                            text.into(),
+                                                            tag.into(),
+                                                            match tag {
+                                                                similar::ChangeTag::Equal
+                                                                | similar::ChangeTag::Insert => {
+                                                                    dst_highlight.as_ref()
+                                                                }
+                                                                similar::ChangeTag::Delete => {
+                                                                    src_highlight.as_ref()
+                                                                }
+                                                            }
+                                                            .unwrap(),
+                                                        )
                                                     },
-                                                    text.into(),
-                                                    tag.into(),
-                                                    match tag {
-                                                        similar::ChangeTag::Equal
-                                                        | similar::ChangeTag::Insert => {
-                                                            dst_highlight.as_ref()
-                                                        }
-                                                        similar::ChangeTag::Delete => {
-                                                            src_highlight.as_ref()
-                                                        }
-                                                    }
-                                                    .unwrap(),
-                                                )
-                                            })
-                                        })
-                                        .collect();
+                                                ));
+
+                                                (src_pos, dst_pos, diff)
+                                            },
+                                        );
 
                                     let removed_lines: Vec<_> = split_fragments_into_lines(
                                         diff.iter()
@@ -329,7 +335,7 @@ impl FileDiff {
                                     .map(|(i, line)| LineDiff {
                                         fragments: line,
                                         status: DiffStatus::Removed,
-                                        src_line_number: Some(removed_line_numbers[i - 1]),
+                                        src_line_number: Some(removed_line_numbers[i]),
                                         dst_line_number: None,
                                     })
                                     .collect();
@@ -345,7 +351,7 @@ impl FileDiff {
                                         fragments: line,
                                         status: DiffStatus::Added,
                                         src_line_number: None,
-                                        dst_line_number: Some(added_line_numbers[i - 1]),
+                                        dst_line_number: Some(added_line_numbers[i]),
                                     })
                                     .collect();
 
@@ -515,7 +521,7 @@ fn tokenize_code(s: &str) -> Vec<&str> {
 mod test {
     use crate::structures::{diff_status::DiffStatus, file_diff::line_number_range};
 
-    use super::{Fragment, Highlight};
+    use super::{split_fragments_into_lines, Fragment, Highlight};
 
     #[test]
     fn calculates_line_number_range() {
@@ -633,6 +639,42 @@ Fourth and final line";
                     status: DiffStatus::Unmodified,
                     class: Some(vec!["punctuation".into()])
                 },
+            ]
+        );
+    }
+
+    #[test]
+    fn splits_fragments_into_lines() {
+        let fragment_1 = Fragment {
+            text: "one".into(),
+            status: DiffStatus::Unmodified,
+            class: None,
+        };
+        let fragment_2 = Fragment {
+            text: "two\n".into(),
+            status: DiffStatus::Added,
+            class: None,
+        };
+        let fragment_3 = Fragment {
+            text: "three".into(),
+            status: DiffStatus::Removed,
+            class: None,
+        };
+        let fragments = vec![&fragment_1, &fragment_2, &fragment_3];
+        let lines = split_fragments_into_lines(fragments);
+
+        assert_eq!(
+            lines,
+            vec![
+                vec![
+                    fragment_1,
+                    Fragment {
+                        text: "two".into(),
+                        status: DiffStatus::Added,
+                        class: None,
+                    }
+                ],
+                vec![fragment_3]
             ]
         );
     }
