@@ -14,6 +14,7 @@ pub mod cli;
 pub mod commands;
 pub mod db;
 pub mod structures;
+pub mod utils;
 
 fn main() {
     let (invoke_handler, register_events) = {

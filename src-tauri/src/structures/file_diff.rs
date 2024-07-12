@@ -1,107 +1,14 @@
-use std::{borrow::BorrowMut, ops::Range, time::Duration};
+use std::{ops::Range, time::Duration};
 
 use serde::Serialize;
 use specta::Type;
-use tree_sitter_highlight::{HighlightConfiguration, HighlightEvent, Highlighter};
 
-use crate::structures::file_diff_meta::HunkSection;
+use crate::{
+    structures::file_diff_meta::HunkSection,
+    utils::highlight::{HighlightLanguage, Highlights, SyntaxHighlighter},
+};
 
 use super::{diff_status::DiffStatus, file_diff_meta::FileDiffMeta};
-
-pub const HIGHLIGHT_NAMES: &[&str] = &[
-    "attribute",
-    "type",
-    "type.builtin",
-    "type.enum",
-    "type.enum.variant",
-    "constructor",
-    "constant",
-    "constant.builtin",
-    "constant.builtin.boolean",
-    "constant.character",
-    "constant.character.escape",
-    "constant.numeric",
-    "constant.numeric.integer",
-    "constant.numeric.float",
-    "string",
-    "string.regexp",
-    "string.special",
-    "string.special.path",
-    "string.special.url",
-    "string.special.symbol",
-    "escape",
-    "comment",
-    "comment.documentation",
-    "comment.line",
-    "comment.block",
-    "comment.block.documentation",
-    "variable",
-    "variable.builtin",
-    "variable.parameter",
-    "variable.other",
-    "variable.other.member",
-    "label",
-    "punctuation",
-    "punctuation.delimiter",
-    "punctuation.bracket",
-    "punctuation.special",
-    "keyword",
-    "keyword.control",
-    "keyword.control.conditional",
-    "keyword.control.repeat",
-    "keyword.control.import",
-    "keyword.control.return",
-    "keyword.control.exception",
-    "keyword.operator",
-    "keyword.directive",
-    "keyword.function",
-    "keyword.storage",
-    "keyword.storage.type",
-    "keyword.storage.modifier",
-    "operator",
-    "function",
-    "function.builtin",
-    "function.method",
-    "function.macro",
-    "function.special",
-    "tag",
-    "tag.builtin",
-    "namespace",
-    "special",
-    "markup",
-    "markup.heading",
-    "markup.heading.marker",
-    "markup.heading.1",
-    "markup.heading.2",
-    "markup.heading.3",
-    "markup.heading.4",
-    "markup.heading.5",
-    "markup.heading.6",
-    "markup.list",
-    "markup.list.unnumbered",
-    "markup.list.numbered",
-    "markup.list.checked",
-    "markup.list.unchecked",
-    "markup.bold",
-    "markup.italic",
-    "markup.strikethrough",
-    "markup.link",
-    "markup.link.url",
-    "markup.link.label",
-    "markup.link.text",
-    "markup.quote",
-    "markup.raw",
-    "markup.raw.inline",
-    "markup.raw.block",
-    "diff",
-    "diff.plus",
-    "diff.minus",
-    "diff.delta",
-    "diff.delta.moved",
-];
-
-#[derive(Clone)]
-struct Highlight(Vec<(Range<usize>, Vec<String>)>);
 
 #[derive(Debug, Serialize, Type, Clone, Eq, PartialEq)]
 pub struct Fragment {
@@ -139,24 +46,14 @@ impl FileDiff {
         let src_lines: Option<Vec<&str>> = src_file.as_ref().map(|file| file.lines().collect());
         let dst_lines: Option<Vec<&str>> = dst_file.as_ref().map(|file| file.lines().collect());
 
-        let mut highlighter = Highlighter::new();
-        let lang_rs = tree_sitter_rust::language();
-        let mut config = HighlightConfiguration::new(
-            lang_rs,
-            "rust",
-            tree_sitter_rust::HIGHLIGHTS_QUERY,
-            tree_sitter_rust::INJECTIONS_QUERY,
-            tree_sitter_rust::TAGS_QUERY,
-        )
-        .unwrap();
-        config.configure(HIGHLIGHT_NAMES);
+        let mut highlighter = SyntaxHighlighter::new();
 
         let src_highlight = src_file
             .as_ref()
-            .map(|file| Highlight::from(highlighter.borrow_mut(), &config, file));
+            .map(|file| highlighter.highlight(HighlightLanguage::from_path(&meta.src_path), file));
         let dst_highlight = dst_file
             .as_ref()
-            .map(|file| Highlight::from(highlighter.borrow_mut(), &config, file));
+            .map(|file| highlighter.highlight(HighlightLanguage::from_path(&meta.dst_path), file));
 
         Ok(Self(
             meta.hunks
@@ -378,7 +275,7 @@ impl Fragment {
         source_range: Range<usize>,
         text: String,
         status: DiffStatus,
-        highlights: &Highlight,
+        highlights: &Highlights,
     ) -> Vec<Self> {
         let start = source_range.start;
 
@@ -430,67 +327,6 @@ fn line_number_range(line_number: usize, file: &str) -> Range<usize> {
     start..start + end
 }
 
-impl Highlight {
-    fn from(highlighter: &mut Highlighter, config: &HighlightConfiguration, text: &str) -> Self {
-        let mut highlights = Vec::new();
-        let mut current_range: Option<Range<usize>> = None;
-        let mut current_class: Option<Vec<String>> = None;
-
-        for event in highlighter
-            .highlight(config, text.as_bytes(), None, |_| None)
-            .unwrap()
-        {
-            match event.unwrap() {
-                HighlightEvent::HighlightStart(h) => {
-                    current_class =
-                        Some(HIGHLIGHT_NAMES[h.0].split('.').map(|c| c.into()).collect());
-                }
-                HighlightEvent::Source { start, end } => {
-                    current_range = Some(start..end);
-                }
-                HighlightEvent::HighlightEnd => {
-                    if let Some(range) = current_range.clone() {
-                        if let Some(class) = current_class.clone() {
-                            highlights.push((range, class))
-                        }
-                    }
-                }
-            }
-        }
-
-        Self(highlights)
-    }
-
-    /// Takes a range and returns the highlighted ranges and fills in the gaps with None ranges
-    fn get_ranges(&self, range: Range<usize>) -> Vec<(Range<usize>, Option<Vec<String>>)> {
-        let mut ranges = Vec::new();
-        let mut current_start = range.start;
-
-        // Assume the ranges are sorted
-        let highlights_in_range = self
-            .0
-            .iter()
-            .filter(|h| range.contains(&h.0.start) && range.contains(&(h.0.end - 1)));
-
-        for (r, class) in highlights_in_range {
-            // Gap between the current pos and the start of the next range
-            if current_start < r.start {
-                ranges.push((current_start..r.start, None))
-            }
-
-            ranges.push((r.clone(), Some(class.clone())));
-            current_start = r.end;
-        }
-
-        // Gap after the last range
-        if current_start < range.end {
-            ranges.push((current_start..range.end, None))
-        }
-
-        ranges
-    }
-}
-
 /// Tokenize into chars, but keep runs of ascii letters and numbers in single tokens
 fn tokenize_code(s: &str) -> Vec<&str> {
     let mut rv = vec![];
@@ -522,7 +358,7 @@ fn tokenize_code(s: &str) -> Vec<&str> {
 mod test {
     use crate::structures::{diff_status::DiffStatus, file_diff::line_number_range};
 
-    use super::{split_fragments_into_lines, Fragment, Highlight};
+    use super::{split_fragments_into_lines, Fragment, Highlights};
 
     #[test]
     fn calculates_line_number_range() {
@@ -542,7 +378,7 @@ Fourth and final line";
     #[test]
     fn fills_in_range_gaps() {
         let file = "line 1\n  second line";
-        let highlights = Highlight(vec![
+        let highlights = Highlights(vec![
             (0..4, vec!["variable".into()]),
             (5..6, vec!["constant".into()]),
             (9..15, vec!["variable".into()]),
@@ -564,7 +400,7 @@ Fourth and final line";
     #[test]
     fn creates_fragments_from_highlights() {
         let file = "// My cool string\nlet my_variable = String::from(\"Something\");";
-        let highlights = Highlight(vec![
+        let highlights = Highlights(vec![
             (0..17, vec!["comment".into()]),
             (18..21, vec!["keyword".into()]),
             (22..33, vec!["variable".into()]),
