@@ -1,5 +1,15 @@
 # Changelog
 
+## \[0.6.0]
+
+### New Features
+
+- [`deba385`](https://www.github.com/GRA0007/strand/commit/deba3850edb5c949db081705c7b032aa1cb7a69f) Add syntax highlighting to the diff viewer
+
+### Bug Fixes
+
+- [`639e1af`](https://www.github.com/GRA0007/strand/commit/639e1affd0b3be0132bf513f96234ea3eb1eb39a) Limit the number of commits loaded to 500
+
 ## \[0.5.0]
 
 ### New Features
