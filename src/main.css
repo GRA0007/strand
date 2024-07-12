@@ -62,24 +62,89 @@ button {
     @apply cursor-default;
 }
 
-.keyword {
-    color: blue;
+/* TODO: Provide a way of customizing the theme */
+/* Taken from https://github.com/helix-editor/helix/blob/master/runtime/themes/github_light.toml */
+:root {
+    --code-red-dark: #ff7b72;
+    --code-orange-dark: #ffa657;
+    --code-blue-dark: #a5d6ff;
+    --code-blue: #79c0ff;
+    --code-purple: #d2a8ff;
+    --code-green-dark: #7ee787;
+    --code-gray: #8b949e;
+    --code-green: #3fb950;
+    --code-red: #f85149;
+    --code-orange: #d29922;
 }
-.punctuation {
-    color: royalblue;
+@media (prefers-color-scheme: light) {
+    :root {
+        --code-red-dark: #cf222e;
+        --code-orange-dark: #953800;
+        --code-blue-dark: #0a3069;
+        --code-blue: #0550ae;
+        --code-purple: #8250df;
+        --code-green-dark: #116329;
+        --code-gray: #57606a;
+        --code-green: #1a7f37;
+        --code-red: #cf222e;
+        --code-orange: #9a6700;
+    }
 }
-.constructor {
-    color: firebrick;
-}
-.comment {
-    color: gray;
-}
-.type {
-    color: hotpink;
-}
-.string {
-    color: olive;
-}
-.function {
-    color: darkcyan;
+
+pre code {
+    .keyword,
+    .variable.builtin,
+    .label {
+        color: var(--code-red-dark);
+    }
+    .namespace,
+    .variable.parameter,
+    .type {
+        color: var(--code-orange-dark);
+    }
+    .operator,
+    .special,
+    .variable.other.member,
+    .string,
+    .markup.link.text {
+        color: var(--code-blue-dark);
+    }
+    .type.builtin,
+    .constant,
+    .markup.heading,
+    .markup.raw {
+        color: var(--code-blue);
+    }
+    .constructor,
+    .function {
+        color: var(--code-purple);
+    }
+    .tag {
+        color: var(--code-green-dark);
+    }
+    .comment {
+        color: var(--code-gray);
+    }
+    .markup.bold {
+        font-weight: 700;
+    }
+    .markup.italic {
+        font-style: italic;
+    }
+    .markup.strikethrough {
+        text-decoration: line-through;
+    }
+    .markup.link.url,
+    .markup.link.text {
+        text-decoration: underline;
+    }
+    .diff.plus {
+        color: var(--code-green);
+    }
+    .diff.minus {
+        color: var(--code-red);
+    }
+    .diff.delta {
+        color: var(--code-orange);
+    }
 }
