@@ -58,11 +58,12 @@ impl FromStr for Hunk {
             .trim()
             .split(' ')
             .flat_map(|section| {
-                let mut nums = section
-                    .split_at(1)
-                    .1
-                    .split(',')
-                    .flat_map(|n| n.parse::<usize>().ok());
+                let mut nums: String = section.split_at(1).1.into();
+                // If there is no newline then the range might only have 1 number
+                if !nums.contains(',') {
+                    nums = format!("{nums},1");
+                }
+                let mut nums = nums.split(',').flat_map(|n| n.parse::<usize>().ok());
 
                 let line_number = nums.next()?;
                 Some(line_number..line_number + nums.next()?)
@@ -73,6 +74,10 @@ impl FromStr for Hunk {
         let (mut src_line, mut dst_line) = (src_lines.start, dst_lines.start);
         let lines: Vec<Line> = lines
             .map(|line| {
+                if line == "\\ No newline at end of file" {
+                    return Ok((None, None, DiffStatus::Unmodified));
+                }
+
                 let status: DiffStatus = if line.is_empty() {
                     ' '
                 } else {
@@ -102,6 +107,13 @@ impl FromStr for Hunk {
                         line
                     }
                 })
+            })
+            // Filter out lines with no line numbers
+            .filter(|r| {
+                r.is_err()
+                    || (r
+                        .as_ref()
+                        .is_ok_and(|line| line.0.is_some() || line.1.is_some()))
             })
             .collect::<Result<_, String>>()?;
 
