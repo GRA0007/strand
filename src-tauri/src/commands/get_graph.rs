@@ -23,6 +23,7 @@ pub async fn get_graph(app_handle: tauri::AppHandle) -> CommandResult<Vec<Commit
     let commits = GitCommand::new("log")
         .arg(format!("--format={format}\x01"))
         .arg("--all")
+        .arg("-500") // Limit to 500 commits
         .run(&app_handle, GitCommandType::Query)
         .await?;
 
