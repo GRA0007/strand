@@ -105,9 +105,9 @@ export type Commit = { hash: GitHash; parent_hashes: GitHash[]; author: CommitUs
 export type CommitUser = { name: string; email: string; date: string; email_hash: string }
 export type DiffHunk = { 
 /**
- * Raw header text
+ * Raw header text, or None if the whole file was requested
  */
-header: string; lines: LineDiff[] }
+header: string | null; lines: LineDiff[] }
 export type DiffStatus = "Added" | "Removed" | "Unmodified"
 export type File = { 
 /**
@@ -160,11 +160,12 @@ export type FileStatus =
  * "Unknown" change type
  */
 "Unknown"
+export type Fragment = { text: string; status: DiffStatus; class: string[] | null }
 export type GitCommandEvent = GitCommandLog
 export type GitCommandLog = { id: number; command: string; command_type: GitCommandType; created_at: string }
 export type GitCommandType = "Query" | "Mutation"
 export type GitHash = string
-export type LineDiff = { words: WordDiff[]; status: DiffStatus; 
+export type LineDiff = { fragments: Fragment[]; status: DiffStatus; 
 /**
  * None if status is Added
  */
@@ -188,7 +189,6 @@ export type Repository = { id: number; name: string; local_path: string; created
  * If both are 0, it's in sync. If None, the tracked upstream is missing.
  */
 export type UpstreamTrack = [number, number] | null
-export type WordDiff = { text: string; status: DiffStatus }
 
 /** tauri-specta globals **/
 

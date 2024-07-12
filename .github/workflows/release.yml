@@ -59,13 +59,13 @@ jobs:
       matrix:
         include:
           - platform: macos-latest # ARM
-            args: '--target aarch64-apple-darwin'
+            args: "--target aarch64-apple-darwin"
           - platform: macos-latest # Intel
-            args: '--target x86_64-apple-darwin'
+            args: "--target x86_64-apple-darwin"
           - platform: ubuntu-22.04
-            args: ''
+            args: ""
           - platform: windows-latest
-            args: ''
+            args: ""
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -92,7 +92,7 @@ jobs:
           CI: false
         with:
           releaseId: ${{ needs.covector.outputs.releaseId }}
-          args: ${{ matrix.args }} --verbose
+          args: ${{ matrix.args }}
 
   release:
     runs-on: ubuntu-latest
