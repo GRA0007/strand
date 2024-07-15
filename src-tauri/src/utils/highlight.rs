@@ -1,4 +1,4 @@
-use std::{ops::Range, path::PathBuf, sync::OnceLock};
+use std::{cmp, ops::Range, path::PathBuf, sync::OnceLock};
 
 use tree_sitter_highlight::HighlightConfiguration;
 
@@ -25,7 +25,6 @@ pub const HIGHLIGHT_NAMES: &[&str] = &[
     "string.special.symbol",
     "escape",
     "comment",
-    "comment.documentation",
     "comment.line",
     "comment.block",
     "comment.block.documentation",
@@ -159,7 +158,7 @@ impl Highlights {
         let highlights_in_range = self
             .0
             .iter()
-            .filter(|h| range.contains(&h.0.start) && range.contains(&(h.0.end - 1)));
+            .filter(|h| h.0.clone().any(|r| range.contains(&r)));
 
         for (r, class) in highlights_in_range {
             // Gap between the current pos and the start of the next range
@@ -167,7 +166,10 @@ impl Highlights {
                 ranges.push((current_start..r.start, None))
             }
 
-            ranges.push((r.clone(), Some(class.clone())));
+            ranges.push((
+                cmp::max(r.start, current_start)..cmp::min(r.end, range.end),
+                Some(class.clone()),
+            ));
             current_start = r.end;
         }
 
