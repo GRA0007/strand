@@ -3,7 +3,7 @@
 # Strand
 
 [![GitHub Release](https://img.shields.io/github/v/release/GRA0007/strand?label=Version)](https://github.com/GRA0007/strand/releases)
-[![checks](https://github.com/GRA0007/strand/actions/workflows/checks.yml/badge.svg)](https://github.com/GRA0007/strand/actions/workflows/checks.yml)
+[![checks](https://img.shields.io/github/check-runs/GRA0007/strand/main?label=Checks)](https://github.com/GRA0007/strand/actions)
 [![Tauri v2](https://img.shields.io/badge/Tauri-v2-FFC131?logo=tauri&logoColor=FFC131)](https://tauri.app/)
 
 > A strand-like git GUI
