@@ -513,3 +513,48 @@ impl HighlightLanguage {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::Highlights;
+
+    #[test]
+    fn gets_contained_ranges() {
+        let highlights = Highlights(vec![(2..4, vec!["a".into()]), (6..7, vec!["b".into()])]);
+
+        assert_eq!(
+            highlights.get_ranges(1..10),
+            vec![
+                (1..2, None),
+                (2..4, Some(vec!["a".into()])),
+                (4..6, None),
+                (6..7, Some(vec!["b".into()])),
+                (7..10, None),
+            ]
+        );
+    }
+
+    #[test]
+    fn gets_overlapping_ranges() {
+        let highlights = Highlights(vec![(2..4, vec!["a".into()]), (5..7, vec!["b".into()])]);
+
+        assert_eq!(
+            highlights.get_ranges(3..6),
+            vec![
+                (3..4, Some(vec!["a".into()])),
+                (4..5, None),
+                (5..6, Some(vec!["b".into()])),
+            ]
+        );
+    }
+
+    #[test]
+    fn gets_inside_range() {
+        let highlights = Highlights(vec![(2..6, vec!["a".into()]), (8..10, vec!["b".into()])]);
+
+        assert_eq!(
+            highlights.get_ranges(3..4),
+            vec![(3..4, Some(vec!["a".into()])),]
+        );
+    }
+}
