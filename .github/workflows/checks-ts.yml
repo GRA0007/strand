@@ -2,6 +2,9 @@ name: TypeScript checks
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
     paths:
       - "src/**"
       - "biome.json"

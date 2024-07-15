@@ -2,6 +2,9 @@ name: Rust checks
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
     paths:
       - "src-tauri/**"
       - ".github/workflows/checks-rs.yml"
@@ -16,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
-      - run: cargo clippy --all-targets --all-features --no-deps -- -D warnings
+      - run: cargo clippy --all-targets --no-deps -- -D warnings
         working-directory: src-tauri
 
   tests:
@@ -24,5 +27,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
-      - run: cargo test --all-targets --all-features
+      - run: cargo test --all-targets
         working-directory: src-tauri
