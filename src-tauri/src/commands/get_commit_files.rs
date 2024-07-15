@@ -14,11 +14,11 @@ pub async fn get_commit_files(
 ) -> CommandResult<Vec<File>> {
     let files = GitCommand::new("show")
         .arg(commit_hash.0)
-        .arg("--raw")
-        .arg("--abbrev=40")
-        .arg("-z")
-        .arg("-m")
-        .arg("--format=")
+        .arg("--raw") // Show a summary of changes without the full diffs
+        .arg("--abbrev=40") // Show full git hashes
+        .arg("-z") // Separate commits with NULs for parsing
+        .arg("--diff-merges=1") // Show merge commits in the same format as regular commits
+        .arg("--format=") // Disable the commit info so we only get the files
         .run(&app_handle, GitCommandType::Query)
         .await?;
 
