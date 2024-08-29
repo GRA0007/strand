@@ -171,6 +171,27 @@ impl Db {
                 .await?
                 .last_insert_rowid();
 
+                // Limit the number of logs of each type stored in the database
+                let count = sqlx::query!(
+                    "SELECT COUNT(*) as count FROM git_command_log WHERE command_type = ?",
+                    command_type
+                )
+                .fetch_one(&self.pool)
+                .await?
+                .count;
+
+                // TODO: Use a configurable value for the maximum
+                if count > 200 {
+                    let amount_to_delete = count - 200;
+                    sqlx::query!(
+                        "DELETE FROM git_command_log WHERE id IN (SELECT id FROM git_command_log WHERE command_type = ? ORDER BY created_at ASC LIMIT ?)",
+                        command_type,
+                        amount_to_delete
+                    )
+                    .execute(&self.pool)
+                    .await?;
+                }
+
                 sqlx::query_as!(
                     GitCommandLog,
                     "SELECT id, command, command_type, created_at FROM git_command_log WHERE id = ?",

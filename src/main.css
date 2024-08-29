@@ -11,6 +11,7 @@
 
 :root {
     --font-family-sans: "Inter", sans-serif;
+    --font-family-mono: monospace;
 
     --color-background: 24 24 24; /* #181818 */
     --color-foreground: 238 238 238; /* #EEEEEE */

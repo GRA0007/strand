@@ -5,7 +5,7 @@ import { cn } from '../../utils/cn'
 export const Diff = ({ diff }: { diff: FileDiff }) => {
   return (
     <pre className="flex-1 overflow-auto py-2 text-sm select-text cursor-auto">
-      <code className="w-max min-w-full grid grid-cols-[auto_auto_1fr]">
+      <code className="w-max min-w-full grid grid-cols-[auto_auto_1fr] font-mono">
         {diff.map((hunk) => (
           <Fragment key={hunk.header}>
             <div className="bg-info/30 py-1 px-3 text-foreground/70 col-span-full">{hunk.header}</div>

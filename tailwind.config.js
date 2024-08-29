@@ -4,6 +4,7 @@ export default {
   theme: {
     fontFamily: {
       sans: 'var(--font-family-sans)',
+      mono: 'var(--font-family-mono)',
     },
     extend: {
       colors: {
