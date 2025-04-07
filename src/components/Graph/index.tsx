@@ -16,6 +16,15 @@ export const Graph = () => {
     refetchOnWindowFocus: true,
   })
 
+  const test = useCommandQuery({
+    queryKey: ['status'],
+    queryFn: commands.getChangedFiles,
+    enabled: Boolean(openRepository),
+    refetchOnWindowFocus: true,
+  })
+
+  console.log(test.data)
+
   const [selectedHash, _setSelectedHash] = useAtom(selectedCommitHashAtom)
   const setSelectedFileId = useSetAtom(selectedFileIdAtom)
   const setSelectedHash = (hash: string | null) => {
@@ -72,7 +81,7 @@ export const Graph = () => {
 
   return (
     <div className="overflow-y-auto h-full">
-      <div className="bg-[linear-gradient(color-mix(in_srgb,_var(--color-foreground)_5%,_transparent)_50%,transparent_50%)] [background-size:100%_3.5rem]">
+      <div className="bg-[linear-gradient(color-mix(in_srgb,_rgb(var(--color-foreground))_5%,_transparent)_50%,transparent_50%)] [background-size:100%_3.5rem]">
         {commits?.map((commit) => (
           <CommitRow
             key={commit.hash}
