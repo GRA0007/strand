@@ -68,7 +68,7 @@ export const CommitDetails = () => {
 
             {files && (
               <>
-                <CommitStats files={files} />
+                <CommitStats className="mt-4 mb-1.5" files={files} />
 
                 <div className="bg-surface rounded-md flex-1 flex flex-col min-h-0">
                   <div className="overflow-y-auto flex-1 pt-1">

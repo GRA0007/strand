@@ -83,6 +83,14 @@ try {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+async getChangedFiles() : Promise<Result<[File[], File[]], string>> {
+try {
+    return { status: "ok", data: await TAURI_INVOKE("get_changed_files") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 

@@ -1,7 +1,7 @@
 use serde::Serialize;
 use specta::Type;
 
-#[derive(Debug, Serialize, Type)]
+#[derive(Debug, Serialize, Type, Clone, Copy)]
 #[repr(u8)]
 pub enum FileStatus {
     /// Addition of a file
