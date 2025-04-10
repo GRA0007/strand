@@ -3,11 +3,11 @@ import { FileInputIcon, MinusIcon, PencilIcon, PlusIcon } from 'lucide-react'
 import type { File } from '../../bindings'
 import { TooltipContent } from '../UI/Tooltip'
 
-export const CommitStats = ({ files }: { files: File[] }) => {
+export const CommitStats = ({ files, className }: { files: File[]; className?: string }) => {
   const stats = calculateStats(files)
 
   return (
-    <div className="mt-4 mb-1.5">
+    <div className={className}>
       <div className="flex gap-2.5 items-center">
         {stats.modified > 0 && (
           <Tooltip>
