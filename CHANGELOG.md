@@ -1,5 +1,16 @@
 # Changelog
 
+## \[0.7.0]
+
+### New Features
+
+- [`83e89e2`](https://www.github.com/GRA0007/strand/commit/83e89e25b68747dcd32274df46f33cf62e6c5063) Show changed files status at the top of the graph
+
+### Bug Fixes
+
+- [`0e88b8a`](https://www.github.com/GRA0007/strand/commit/0e88b8ade148708f5918bd09e28fc27e05b844fa) Load correct files for merge commits
+- [`e215a4b`](https://www.github.com/GRA0007/strand/commit/e215a4b73d85e1e38238ab4c488000055cfe6a72) Correctly apply syntax highlighting on the edge or between word diffs
+
 ## \[0.6.0]
 
 ### New Features
