@@ -17,10 +17,7 @@ pub async fn get_changed_files(
         .run(&app_handle, GitCommandType::Query)
         .await?;
 
-    let items = items
-        .strip_suffix('\x00')
-        .ok_or(CommandError::Parse("Failed to strip files suffix".into()))?
-        .split('\x00');
+    let items = items.split('\x00').filter(|item| !item.is_empty());
 
     let mut staged_files = Vec::new();
     let mut unstaged_files = Vec::new();
