@@ -4,6 +4,7 @@ use crate::cli::GitError;
 
 pub mod add_repository_from_path;
 pub mod get_branches;
+pub mod get_changed_files;
 pub mod get_commit_files;
 pub mod get_file_diff;
 pub mod get_git_command_log;
