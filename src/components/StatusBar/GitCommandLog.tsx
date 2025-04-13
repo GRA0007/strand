@@ -105,8 +105,8 @@ const LogItem = ({ item }: { item: GitCommandLogType }) => {
       <span className="text-foreground/60" title={formatDate(item.created_at)}>
         {formatDate(item.created_at, 'yyyy-MM-dd HH:mm:ss')}
       </span>
-      {item.command_type === 'Query' && <SearchIcon className="h-3 w-3 flex-shrink-0" />}
-      {item.command_type === 'Mutation' && <PencilIcon className="h-3 w-3 flex-shrink-0" />}
+      {item.command_type === 'Query' && <SearchIcon className="h-3 w-3 shrink-0" />}
+      {item.command_type === 'Mutation' && <PencilIcon className="h-3 w-3 shrink-0" />}
       <span>{item.command}</span>
     </div>
   )

@@ -47,7 +47,7 @@ export const Toast = ({ variant, title, children, action, onClose, delay = 5_000
       {action && (
         <button
           type="button"
-          className="bg-foreground hover:bg-foreground/90 active:bg-foreground/80 text-background text-xs font-semibold rounded px-1 py-0.5"
+          className="bg-foreground hover:bg-foreground/90 active:bg-foreground/80 text-background text-xs font-semibold rounded-sm px-1 py-0.5"
           onClick={action.onClick}
         >
           {action.label}
@@ -56,7 +56,7 @@ export const Toast = ({ variant, title, children, action, onClose, delay = 5_000
 
       <button
         type="button"
-        className="absolute -top-1.5 -right-1.5 h-5 w-5 bg-inherit border-inherit border rounded-full flex items-center justify-center shadow opacity-0 invisible pointer-events-none transition-[opacity,visibility] group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto"
+        className="absolute -top-1.5 -right-1.5 h-5 w-5 bg-inherit border-inherit border rounded-full flex items-center justify-center shadow-sm opacity-0 invisible pointer-events-none transition-[opacity,visibility] group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto"
         onClick={() => onClose()}
       >
         <XIcon className="h-3 w-3" />

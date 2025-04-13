@@ -78,9 +78,9 @@ export const AvatarStack = ({ children, className }: { children: React.ReactNode
               className,
               'relative',
               i > 0 && 'group-hover:ml-1 transition-[margin]',
-              i === 0 && 'z-[3]',
-              i === 1 && 'z-[2] ml-[-1.1rem]',
-              i === 2 && 'z-[1] -ml-5',
+              i === 0 && 'z-3',
+              i === 1 && 'z-2 ml-[-1.1rem]',
+              i === 2 && 'z-1 -ml-5',
             )}
           >
             {child}

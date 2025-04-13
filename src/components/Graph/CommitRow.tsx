@@ -10,7 +10,7 @@ export const CommitRow = ({
   return (
     <div key={commit.hash} className="h-7 pl-2">
       <div
-        className="flex-1 flex items-center group/commit-row h-full w-full outline-none"
+        className="flex-1 flex items-center group/commit-row h-full w-full outline-hidden"
         onPointerDown={() => onSelect()}
         id={commit.hash}
         tabIndex={-1}
