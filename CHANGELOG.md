@@ -1,5 +1,18 @@
 # Changelog
 
+## \[0.7.0]
+
+### New Features
+
+- [`5573d91`](https://www.github.com/GRA0007/strand/commit/5573d9145ed1618f2e3c11547bc74c4f170c19f3) Limit the number of git command log items that are stored per type to 200
+- [`83e89e2`](https://www.github.com/GRA0007/strand/commit/83e89e25b68747dcd32274df46f33cf62e6c5063) Show changed files status at the top of the graph
+- [`f47217a`](https://www.github.com/GRA0007/strand/commit/f47217af3328cfd35e916602adddc0a678aab0da) Upgrade dependencies and migrate to `pnpm` for development
+
+### Bug Fixes
+
+- [`0e88b8a`](https://www.github.com/GRA0007/strand/commit/0e88b8ade148708f5918bd09e28fc27e05b844fa) Load correct files for merge commits
+- [`e215a4b`](https://www.github.com/GRA0007/strand/commit/e215a4b73d85e1e38238ab4c488000055cfe6a72) Correctly apply syntax highlighting on the edge or between word diffs
+
 ## \[0.6.0]
 
 ### New Features
