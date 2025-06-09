@@ -37,7 +37,9 @@ fn main() {
     #[cfg(debug_assertions)]
     builder
         .export(
-            Typescript::default().bigint(specta_typescript::BigIntExportBehavior::Number),
+            Typescript::default()
+                .header("//@ts-nocheck")
+                .bigint(specta_typescript::BigIntExportBehavior::Number),
             "../src/bindings.ts",
         )
         .expect("Failed to export typescript bindings");
