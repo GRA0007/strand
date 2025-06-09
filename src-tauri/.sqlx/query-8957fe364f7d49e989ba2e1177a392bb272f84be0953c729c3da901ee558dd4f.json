@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM git_command_log WHERE id IN (SELECT id FROM git_command_log WHERE command_type = ? ORDER BY created_at ASC LIMIT ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "8957fe364f7d49e989ba2e1177a392bb272f84be0953c729c3da901ee558dd4f"
+}
