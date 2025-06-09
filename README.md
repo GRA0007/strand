@@ -29,11 +29,11 @@ Strand is still in the early stages of design and development, so any contributi
 
 ### Local Development
 
-1. You'll need [Rust](https://www.rust-lang.org/) and [Node.js](https://nodejs.org/en) ([fnm](https://github.com/Schniz/fnm) recommended) installed to begin
-2. Run `corepack enable` to install yarn
-3. Clone the repository locally with git
-4. Run `yarn` in the root of the repository to install the JavaScript dependencies
-5. Run `yarn tauri dev` to start the dev server
+1. You'll need [Rust](https://www.rust-lang.org/) and [Node.js](https://nodejs.org/en) ([fnm](https://github.com/Schniz/fnm) or similar recommended) installed to begin. Make sure you install the version of Node specified in the `.nvmrc` file.
+2. Install [pnpm](https://pnpm.io/installation).
+3. Clone the repository locally with git.
+4. Run `pnpm i` in the root of the repository to install the JavaScript dependencies.
+5. Run `pnpm tauri dev` to start the dev server.
 
 The UI is built with [React](https://react.dev/), and the code can be found in the `src` folder.
 
