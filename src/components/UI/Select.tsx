@@ -59,7 +59,7 @@ export const SelectItem = forwardRef<React.ElementRef<typeof Item>, React.Compon
       <Item
         ref={ref}
         className={cn(
-          'relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm focus:bg-foreground/10 outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+          'relative flex w-full cursor-default select-none items-center rounded-xs py-1.5 pl-8 pr-2 text-sm focus:bg-foreground/10 outline-hidden data-disabled:pointer-events-none data-disabled:opacity-50',
           className,
         )}
         {...props}

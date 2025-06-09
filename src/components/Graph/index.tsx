@@ -83,7 +83,7 @@ export const Graph = () => {
       <div className="bg-[linear-gradient(transparent_50%,color-mix(in_srgb,rgb(var(--color-foreground))_5%,transparent)_50%)] [background-size:100%_3.5rem]">
         {((changes?.[0].length ?? 0) > 0 || (changes?.[1].length ?? 0) > 0) && (
           <div className="h-7 pl-2">
-            <div className="flex items-center w-full h-full outline-none group/commit-row" tabIndex={-1}>
+            <div className="flex items-center w-full h-full outline-hidden group/commit-row" tabIndex={-1}>
               <div className="flex items-center h-6 rounded-l-full flex-1 min-w-0 group-hover/commit-row:bg-orange-300/20 dark:group-hover/commit-row:bg-orange-900/20">
                 <div className="h-6 w-6 rounded-full border-orange-400 dark:border-orange-700 border-2 border-dashed shrink-0 bg-surface" />
 

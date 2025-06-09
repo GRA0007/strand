@@ -1,31 +1,12 @@
 {
   "language_servers": ["biome", "..."],
-  "languages": {
-    "TSX": {
-      "language_servers": ["!typescript-language-server", "vtsls", "..."],
-      "code_actions_on_format": {
-        "source.fixAll.biome": true,
-        "source.organizeImports.biome": true
-      },
-      "formatter": {
-        "external": {
-          "command": "./node_modules/@biomejs/biome/bin/biome",
-          "arguments": ["format", "--write", "--stdin-file-path", "{buffer_path}"]
-        }
-      }
-    },
-    "TypeScript": {
-      "language_servers": ["!typescript-language-server", "vtsls", "..."],
-      "code_actions_on_format": {
-        "source.fixAll.biome": true,
-        "source.organizeImports.biome": true
-      },
-      "formatter": {
-        "external": {
-          "command": "./node_modules/@biomejs/biome/bin/biome",
-          "arguments": ["format", "--write", "--stdin-file-path", "{buffer_path}"]
-        }
-      }
+  "formatter": {
+    "language_server": {
+      "name": "biome"
     }
+  },
+  "code_actions_on_format": {
+    "source.fixAll.biome": true,
+    "source.organizeImports.biome": true
   }
 }

@@ -6,16 +6,16 @@
     "main"
   ],
   "permissions": [
-    "path:default",
-    "event:default",
-    "window:default",
-    "app:default",
-    "resources:default",
-    "menu:default",
-    "tray:default",
+    "core:path:default",
+    "core:event:default",
+    "core:window:default",
+    "core:app:default",
+    "core:resources:default",
+    "core:menu:default",
+    "core:tray:default",
     "shell:allow-open",
     "dialog:default",
     "dialog:allow-open",
-    "webview:allow-internal-toggle-devtools"
+    "core:webview:allow-internal-toggle-devtools"
   ]
 }

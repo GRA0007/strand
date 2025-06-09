@@ -18,11 +18,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # required for use of git history
-      - run: corepack enable
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          cache: yarn
-      - run: yarn install
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm i
       - uses: jbolda/covector/packages/action@covector-v0
         id: covector
         with:
@@ -70,12 +71,11 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
-      - run: npm uninstall -g yarn && npm install -g corepack
-        if: matrix.platform == 'windows-latest'
-      - run: corepack enable
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          cache: yarn
+          node-version-file: .nvmrc
+          cache: pnpm
       - uses: dtolnay/rust-toolchain@stable
         with:
           # targets only needed on mac builds
@@ -85,7 +85,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
-      - run: yarn install
+      - run: pnpm i
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
