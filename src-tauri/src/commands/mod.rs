@@ -34,7 +34,7 @@ impl serde::Serialize for CommandError {
 
 impl specta::Type for CommandError {
     fn inline(_type_map: &mut specta::TypeMap, _generics: specta::Generics) -> specta::DataType {
-        specta::DataType::Primitive(specta::PrimitiveType::String)
+        specta::DataType::Primitive(specta::datatype::PrimitiveType::String)
     }
 }
 

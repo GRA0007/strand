@@ -270,7 +270,7 @@ impl HighlightLanguage {
         match self {
             Self::C => Some(CONFIG_C.get_or_init(|| {
                 let mut config = HighlightConfiguration::new(
-                    tree_sitter_c::language(),
+                    tree_sitter_c::LANGUAGE.into(),
                     "c",
                     tree_sitter_c::HIGHLIGHT_QUERY,
                     "",
@@ -282,7 +282,7 @@ impl HighlightLanguage {
             })),
             Self::Cpp => Some(CONFIG_CPP.get_or_init(|| {
                 let mut config = HighlightConfiguration::new(
-                    tree_sitter_cpp::language(),
+                    tree_sitter_cpp::LANGUAGE.into(),
                     "c++",
                     tree_sitter_cpp::HIGHLIGHT_QUERY,
                     "",
@@ -294,9 +294,9 @@ impl HighlightLanguage {
             })),
             Self::CSharp => Some(CONFIG_CSHARP.get_or_init(|| {
                 let mut config = HighlightConfiguration::new(
-                    tree_sitter_c_sharp::language(),
+                    tree_sitter_c_sharp::LANGUAGE.into(),
                     "c#",
-                    tree_sitter_c_sharp::HIGHLIGHTS_QUERY,
+                    "",
                     "",
                     "",
                 )
@@ -306,7 +306,7 @@ impl HighlightLanguage {
             })),
             Self::Css => Some(CONFIG_CSS.get_or_init(|| {
                 let mut config = HighlightConfiguration::new(
-                    tree_sitter_css::language(),
+                    tree_sitter_css::LANGUAGE.into(),
                     "css",
                     tree_sitter_css::HIGHLIGHTS_QUERY,
                     "",
@@ -318,7 +318,7 @@ impl HighlightLanguage {
             })),
             Self::Html => Some(CONFIG_HTML.get_or_init(|| {
                 let mut config = HighlightConfiguration::new(
-                    tree_sitter_html::language(),
+                    tree_sitter_html::LANGUAGE.into(),
                     "html",
                     tree_sitter_html::HIGHLIGHTS_QUERY,
                     tree_sitter_html::INJECTIONS_QUERY,
@@ -330,7 +330,7 @@ impl HighlightLanguage {
             })),
             Self::Java => Some(CONFIG_JAVA.get_or_init(|| {
                 let mut config = HighlightConfiguration::new(
-                    tree_sitter_java::language(),
+                    tree_sitter_java::LANGUAGE.into(),
                     "java",
                     tree_sitter_java::HIGHLIGHTS_QUERY,
                     "",
@@ -342,7 +342,7 @@ impl HighlightLanguage {
             })),
             Self::Javascript => Some(CONFIG_JAVASCRIPT.get_or_init(|| {
                 let mut config = HighlightConfiguration::new(
-                    tree_sitter_javascript::language(),
+                    tree_sitter_javascript::LANGUAGE.into(),
                     "javascript",
                     tree_sitter_javascript::HIGHLIGHT_QUERY,
                     tree_sitter_javascript::INJECTIONS_QUERY,
@@ -354,7 +354,7 @@ impl HighlightLanguage {
             })),
             Self::Jsx => Some(CONFIG_JSX.get_or_init(|| {
                 let mut config = HighlightConfiguration::new(
-                    tree_sitter_javascript::language(),
+                    tree_sitter_javascript::LANGUAGE.into(),
                     "jsx",
                     tree_sitter_javascript::JSX_HIGHLIGHT_QUERY,
                     tree_sitter_javascript::INJECTIONS_QUERY,
@@ -366,7 +366,7 @@ impl HighlightLanguage {
             })),
             Self::Json => Some(CONFIG_JSON.get_or_init(|| {
                 let mut config = HighlightConfiguration::new(
-                    tree_sitter_json::language(),
+                    tree_sitter_json::LANGUAGE.into(),
                     "json",
                     tree_sitter_json::HIGHLIGHTS_QUERY,
                     "",
@@ -378,7 +378,7 @@ impl HighlightLanguage {
             })),
             Self::Lua => Some(CONFIG_LUA.get_or_init(|| {
                 let mut config = HighlightConfiguration::new(
-                    tree_sitter_lua::language(),
+                    tree_sitter_lua::LANGUAGE.into(),
                     "lua",
                     tree_sitter_lua::HIGHLIGHTS_QUERY,
                     tree_sitter_lua::INJECTIONS_QUERY,
@@ -390,7 +390,7 @@ impl HighlightLanguage {
             })),
             Self::Markdown => Some(CONFIG_MARKDOWN.get_or_init(|| {
                 let mut config = HighlightConfiguration::new(
-                    tree_sitter_md::language(),
+                    tree_sitter_md::LANGUAGE.into(),
                     "markdown",
                     // TODO: should this use the inline version at all?
                     tree_sitter_md::HIGHLIGHT_QUERY_BLOCK,
@@ -403,7 +403,7 @@ impl HighlightLanguage {
             })),
             Self::Php => Some(CONFIG_PHP.get_or_init(|| {
                 let mut config = HighlightConfiguration::new(
-                    tree_sitter_php::language_php(),
+                    tree_sitter_php::LANGUAGE_PHP.into(),
                     "php",
                     tree_sitter_php::HIGHLIGHTS_QUERY,
                     tree_sitter_php::INJECTIONS_QUERY,
@@ -415,7 +415,7 @@ impl HighlightLanguage {
             })),
             Self::Python => Some(CONFIG_PYTHON.get_or_init(|| {
                 let mut config = HighlightConfiguration::new(
-                    tree_sitter_python::language(),
+                    tree_sitter_python::LANGUAGE.into(),
                     "python",
                     tree_sitter_python::HIGHLIGHTS_QUERY,
                     "",
@@ -427,7 +427,7 @@ impl HighlightLanguage {
             })),
             Self::Ruby => Some(CONFIG_RUBY.get_or_init(|| {
                 let mut config = HighlightConfiguration::new(
-                    tree_sitter_ruby::language(),
+                    tree_sitter_ruby::LANGUAGE.into(),
                     "ruby",
                     tree_sitter_ruby::HIGHLIGHTS_QUERY,
                     "",
@@ -439,7 +439,7 @@ impl HighlightLanguage {
             })),
             Self::Rust => Some(CONFIG_RUST.get_or_init(|| {
                 let mut config = HighlightConfiguration::new(
-                    tree_sitter_rust::language(),
+                    tree_sitter_rust::LANGUAGE.into(),
                     "rust",
                     tree_sitter_rust::HIGHLIGHTS_QUERY,
                     tree_sitter_rust::INJECTIONS_QUERY,
@@ -451,7 +451,7 @@ impl HighlightLanguage {
             })),
             Self::Swift => Some(CONFIG_SWIFT.get_or_init(|| {
                 let mut config = HighlightConfiguration::new(
-                    tree_sitter_swift::language(),
+                    tree_sitter_swift::LANGUAGE.into(),
                     "swift",
                     tree_sitter_swift::HIGHLIGHTS_QUERY,
                     tree_sitter_swift::INJECTIONS_QUERY,
@@ -463,7 +463,7 @@ impl HighlightLanguage {
             })),
             Self::Toml => Some(CONFIG_TOML.get_or_init(|| {
                 let mut config = HighlightConfiguration::new(
-                    tree_sitter_toml_ng::language(),
+                    tree_sitter_toml_ng::LANGUAGE.into(),
                     "toml",
                     tree_sitter_toml_ng::HIGHLIGHTS_QUERY,
                     "",
@@ -475,7 +475,7 @@ impl HighlightLanguage {
             })),
             Self::Typescript => Some(CONFIG_TYPESCRIPT.get_or_init(|| {
                 let mut config = HighlightConfiguration::new(
-                    tree_sitter_typescript::language_typescript(),
+                    tree_sitter_typescript::LANGUAGE_TYPESCRIPT.into(),
                     "typescript",
                     tree_sitter_typescript::HIGHLIGHTS_QUERY,
                     "",
@@ -487,7 +487,7 @@ impl HighlightLanguage {
             })),
             Self::Tsx => Some(CONFIG_TSX.get_or_init(|| {
                 let mut config = HighlightConfiguration::new(
-                    tree_sitter_typescript::language_tsx(),
+                    tree_sitter_typescript::LANGUAGE_TSX.into(),
                     "tsx",
                     tree_sitter_typescript::HIGHLIGHTS_QUERY,
                     "",
@@ -499,7 +499,7 @@ impl HighlightLanguage {
             })),
             Self::Yaml => Some(CONFIG_YAML.get_or_init(|| {
                 let mut config = HighlightConfiguration::new(
-                    tree_sitter_yaml::language(),
+                    tree_sitter_yaml::LANGUAGE.into(),
                     "yaml",
                     tree_sitter_yaml::HIGHLIGHTS_QUERY,
                     "",
